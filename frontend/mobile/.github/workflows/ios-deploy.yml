@@ -1,0 +1,162 @@
+# 제11강: Flutter 앱 실기기 테스트 및 배포 - iOS 자동 배포 파이프라인
+name: iOS Deployment
+
+on:
+  push:
+    branches: [main, release/*]
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Deployment type (testflight, appstore)'
+        required: true
+        default: 'testflight'
+        type: choice
+        options:
+          - testflight
+          - appstore
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: true
+        working-directory: ./frontend/mobile/ios
+    
+    - name: Setup Flutter 3.24
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        cache: true
+    
+    - name: Install dependencies
+      working-directory: ./frontend/mobile
+      run: flutter pub get
+    
+    - name: Run analyzer
+      working-directory: ./frontend/mobile
+      run: flutter analyze
+    
+    - name: Run unit tests
+      working-directory: ./frontend/mobile
+      run: flutter test --coverage
+    
+    - name: Install CocoaPods
+      working-directory: ./frontend/mobile
+      run: |
+        cd ios
+        pod install --repo-update
+    
+    - name: Setup iOS certificates and profiles
+      working-directory: ./frontend/mobile
+      env:
+        MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        MATCH_KEYCHAIN_NAME: ${{ secrets.MATCH_KEYCHAIN_NAME }}
+        MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
+        FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        TEAM_ID: ${{ secrets.TEAM_ID }}
+      run: |
+        # Keychain 생성 및 설정
+        security create-keychain -p "$MATCH_KEYCHAIN_PASSWORD" "$MATCH_KEYCHAIN_NAME"
+        security set-keychain-settings -lut 21600 "$MATCH_KEYCHAIN_NAME"
+        security unlock-keychain -p "$MATCH_KEYCHAIN_PASSWORD" "$MATCH_KEYCHAIN_NAME"
+        security list-keychains -d user -s "$MATCH_KEYCHAIN_NAME" $(security list-keychains -d user | sed s/\"//g)
+        
+        # 기본 키체인으로 설정
+        security default-keychain -s "$MATCH_KEYCHAIN_NAME"
+    
+    - name: Build iOS app
+      working-directory: ./frontend/mobile
+      env:
+        FLUTTER_BUILD_NUMBER: ${{ github.run_number }}
+        FLUTTER_BUILD_NAME: "1.0.0"
+      run: |
+        # Flutter iOS 빌드 (코드 서명 없이)
+        flutter build ios --release \
+          --obfuscate \
+          --split-debug-info=symbols/ios \
+          --no-codesign \
+          --build-number=$FLUTTER_BUILD_NUMBER \
+          --build-name=$FLUTTER_BUILD_NAME
+    
+    - name: Build and archive with Xcode
+      working-directory: ./frontend/mobile/ios
+      env:
+        MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        TEAM_ID: ${{ secrets.TEAM_ID }}
+        BUILD_NUMBER: ${{ github.run_number }}
+      run: |
+        # Fastlane을 사용한 빌드 및 업로드
+        bundle exec fastlane ios build_and_upload \
+          deployment_type:${{ github.event.inputs.deployment_type || 'testflight' }} \
+          build_number:$BUILD_NUMBER
+    
+    - name: Generate iOS release notes
+      working-directory: ./frontend/mobile
+      run: |
+        mkdir -p ios-release-notes
+        echo "Senior MHealth iOS Build #${{ github.run_number }}" > ios-release-notes/release-notes.txt
+        echo "" >> ios-release-notes/release-notes.txt
+        echo "Build Information:" >> ios-release-notes/release-notes.txt
+        echo "- Flutter Version: $(flutter --version --machine | jq -r '.flutterVersion')" >> ios-release-notes/release-notes.txt
+        echo "- Build Date: $(date)" >> ios-release-notes/release-notes.txt
+        echo "- Commit: ${{ github.sha }}" >> ios-release-notes/release-notes.txt
+        echo "- Branch: ${{ github.ref_name }}" >> ios-release-notes/release-notes.txt
+        echo "" >> ios-release-notes/release-notes.txt
+        echo "Recent Changes:" >> ios-release-notes/release-notes.txt
+        git log --oneline --since="7 days ago" >> ios-release-notes/release-notes.txt || echo "No recent commits" >> ios-release-notes/release-notes.txt
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-build-artifacts
+        path: |
+          ./frontend/mobile/build/ios/archive/Runner.xcarchive
+          ./frontend/mobile/symbols/ios/
+          ./frontend/mobile/ios-release-notes/
+        retention-days: 30
+    
+    - name: Run iOS integration tests (if available)
+      working-directory: ./frontend/mobile
+      continue-on-error: true
+      run: |
+        # iOS 시뮬레이터에서 통합 테스트 실행
+        flutter test integration_test/app_test.dart -d "iPhone 15 Pro"
+    
+    - name: Notify deployment status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#mobile-releases'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        text: |
+          🍎 Senior MHealth iOS 배포 상태: ${{ job.status }}
+          
+          📱 플랫폼: iOS
+          🎯 배포 타입: ${{ github.event.inputs.deployment_type || 'testflight' }}
+          📦 빌드: #${{ github.run_number }}
+          🌿 브랜치: ${{ github.ref_name }}
+          👤 작성자: ${{ github.actor }}
+          
+          ${{ job.status == 'success' && '✅ 배포가 성공적으로 완료되었습니다!' || '❌ 배포 중 오류가 발생했습니다.' }}
+          
+          ${{ github.event.inputs.deployment_type == 'testflight' && '📲 TestFlight에서 베타 테스트를 확인하세요.' || '🏪 App Store 심사를 기다리고 있습니다.' }}
+    
+    - name: Clean up keychain
+      if: always()
+      env:
+        MATCH_KEYCHAIN_NAME: ${{ secrets.MATCH_KEYCHAIN_NAME }}
+      run: |
+        security delete-keychain "$MATCH_KEYCHAIN_NAME" || true

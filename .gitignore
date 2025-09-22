@@ -1,0 +1,228 @@
+# === 전체 프로젝트 공통 ===
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.iml
+
+# === AI 팀 (Python) ===
+# 가상환경
+ai/analysis/venv/
+ai/analysis/env/
+ai/analysis/.venv/
+ai/analysis/.env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+# Python lib directories (but not Flutter's lib/)
+ai/analysis/lib/
+backend/api/functions/lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# AI 로그 및 결과
+ai/logs/
+ai/tests/results/
+ai/tests/test_data/
+
+# === Backend 팀 (Node.js) ===
+# 의존성
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# 빌드 결과
+backend/api/functions/lib/
+backend/api/functions/dist/
+*.tsbuildinfo
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+storage-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+firebase-export-*
+emulator-data/
+
+# 로그
+backend/api/functions/*.log
+backend/api/*.log
+pglite-debug.log
+
+# 임시 디렉토리
+backend/api/functions/-p/
+
+# 데이터
+backend/test_data/
+SHRIMP/
+
+# 개발 도구 및 임시 파일
+.playwright-mcp/
+.claude/
+.archived/
+
+# === Frontend 팀 ===
+# React Native & Flutter
+frontend/mobile/android/app/build/
+frontend/mobile/android/.gradle/
+frontend/mobile/ios/Pods/
+frontend/mobile/ios/build/
+*.jsbundle
+
+# Mobile App (Flutter)
+mobile_app/android/.gradle/
+mobile_app/ios/Pods/
+mobile_app/ios/build/
+*.apk  # APK 파일 추적 해제
+*.ipa
+*.aab
+
+# Next.js
+frontend/web/.next/
+frontend/web/out/
+frontend/web/.vercel
+
+# === 환경 변수 (중요!) ===
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+*.env
+
+# 예외: example 파일은 포함
+!.env.example
+!*.env.example
+
+# === Firebase Service Account 키 (보안 중요!) ===
+serviceAccountKey.json
+**/serviceAccountKey.json
+firebase-adminsdk-*.json
+**/firebase-adminsdk-*.json
+
+# === 학생 개인 설정 파일 (절대 커밋 금지!) ===
+# Firebase 프로젝트 설정
+.firebaserc
+firebase_options.dart
+GoogleService-Info.plist
+google-services.json
+
+# 개인 환경 변수
+frontend/web/.env
+frontend/web/.env.local
+frontend/web/.env.production
+backend/functions/.env
+backend/ai-service/.env
+
+# Vercel
+.vercel/
+
+# 개인 프로젝트 설정
+project.config.json
+
+# === 기타 ===
+# 에디터
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 백업 파일
+*.bak
+*.backup
+*.old
+
+# 테스트 커버리지
+coverage/
+*.lcov
+
+# 디버그
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+debug.log
+
+# 임시 파일
+*.tmp
+*.temp
+.cache/
+
+# Logs
+logs
+dev-debug.log
+# Dependency directories
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# === Claude Code 관련 폴더 ===
+.cursor/
+.taskmaster/
+
+
+# === 대용량 파일 ===
+# JDK
+jdk-*/
+jdk-17.0.2/
+
+# Flutter
+flutter_*.tar.xz
+flutter_*_stable.tar.xz
+
+.env
+
+.vercel
+
+# Task files
+# tasks.json
+# tasks/ 
+setup/

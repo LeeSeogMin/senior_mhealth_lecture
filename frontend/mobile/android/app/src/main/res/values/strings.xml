@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Senior Health Monitor</string>
+    <string name="widget_description">전화 받으며 쉽게 통화 녹음을 시작할 수 있는 위젯입니다.</string>
+    <string name="widget_start_recording">🎤 통화 녹음 시작</string>
+    <string name="widget_title">시니어 건강 모니터</string>
+    <string name="widget_subtitle">전화 받으며 한 번 터치</string>
+</resources> 

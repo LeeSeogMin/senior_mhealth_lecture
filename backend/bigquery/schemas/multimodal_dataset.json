@@ -1,0 +1,162 @@
+[
+  {
+    "name": "sample_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Unique identifier for the training sample"
+  },
+  {
+    "name": "user_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "User identifier"
+  },
+  {
+    "name": "session_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Analysis session identifier"
+  },
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "Data collection timestamp"
+  },
+  {
+    "name": "audio_gcs_uri",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "GCS URI to original audio file (gs://bucket/path/to/audio.wav)"
+  },
+  {
+    "name": "text_content",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Transcribed text content from Whisper"
+  },
+  {
+    "name": "text_embedding",
+    "type": "FLOAT",
+    "mode": "REPEATED",
+    "description": "Text embedding vector (768 dimensions)"
+  },
+  {
+    "name": "voice_features",
+    "type": "RECORD",
+    "mode": "NULLABLE",
+    "description": "Voice and speech features",
+    "fields": [
+      {
+        "name": "speech_rate",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Words per minute"
+      },
+      {
+        "name": "pause_ratio",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Ratio of silence to total duration"
+      },
+      {
+        "name": "energy_level",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Normalized voice energy level"
+      },
+      {
+        "name": "pitch_variance",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Variance in voice pitch"
+      },
+      {
+        "name": "mfcc_features",
+        "type": "FLOAT",
+        "mode": "REPEATED",
+        "description": "MFCC features array (optional)"
+      },
+      {
+        "name": "prosody_embedding",
+        "type": "FLOAT",
+        "mode": "REPEATED",
+        "description": "Prosody embedding vector"
+      }
+    ]
+  },
+  {
+    "name": "labels",
+    "type": "RECORD",
+    "mode": "NULLABLE",
+    "description": "Training target labels",
+    "fields": [
+      {
+        "name": "depression",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Depression score (0-1 range)"
+      },
+      {
+        "name": "anxiety",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Anxiety score (0-1 range)"
+      },
+      {
+        "name": "cognitive",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Cognitive score (0-1 range)"
+      },
+      {
+        "name": "sleep_quality",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Sleep quality score"
+      },
+      {
+        "name": "social_engagement",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Social engagement score"
+      },
+      {
+        "name": "appetite_change",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Appetite change score"
+      }
+    ]
+  },
+  {
+    "name": "label_source",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Source of the label: model_prediction, weak_label, expert_review, user_feedback"
+  },
+  {
+    "name": "label_confidence",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Confidence score for the labels (0-1 range)"
+  },
+  {
+    "name": "model_version",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Version of the model that generated predictions"
+  },
+  {
+    "name": "data_version",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Version of the data preprocessing pipeline"
+  },
+  {
+    "name": "split",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Data split: train, val, test"
+  }
+]

@@ -1,0 +1,47 @@
+# Base image for Senior MHealth AI Service
+# Contains all Python dependencies to avoid timeout issues
+# Build this first when dependencies change
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies required for AI/ML libraries in a single layer
+# Minimize layer size by cleaning up in the same RUN command
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ \
+    build-essential \
+    libsndfile1-dev \
+    libportaudio2 \
+    ffmpeg \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Copy requirements files
+COPY backend/ai-service/requirements.txt .
+COPY backend/ai-service/requirements-base.txt ./requirements-base.txt
+COPY backend/ai-service/requirements-ml.txt ./requirements-ml.txt
+
+# Install base dependencies first (better caching)
+RUN pip install --no-cache-dir -r requirements-base.txt
+
+# Install ML dependencies with retry logic for large packages
+RUN pip install --no-cache-dir --timeout=300 -r requirements-ml.txt || \
+    (sleep 5 && pip install --no-cache-dir --timeout=300 -r requirements-ml.txt)
+
+# Install PyTorch CPU version separately with retry (largest package)
+RUN pip install --no-cache-dir --timeout=300 \
+    torch==2.1.2+cpu torchvision==0.16.2+cpu torchaudio==2.1.2+cpu \
+    --index-url https://download.pytorch.org/whl/cpu || \
+    (sleep 10 && pip install --no-cache-dir --timeout=300 \
+    torch==2.1.2+cpu torchvision==0.16.2+cpu torchaudio==2.1.2+cpu \
+    --index-url https://download.pytorch.org/whl/cpu)
+
+# Install remaining requirements
+RUN pip install --no-cache-dir -r requirements.txt || true
+
+# Verify critical packages are installed
+RUN python -c "import torch; import librosa; import transformers; print('Base packages installed successfully')"
+
+# This image will be used as base for the optimized build

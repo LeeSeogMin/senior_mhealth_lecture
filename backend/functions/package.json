@@ -1,0 +1,32 @@
+{
+  "name": "senior-mhealth-functions",
+  "description": "Senior mHealth Backend Functions - Student Practice Version",
+  "version": "1.0.0",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions,firestore",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "test": "echo \"테스트는 주차별로 추가 예정\"",
+    "emulator": "firebase emulators:start"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^11.8.0",
+    "firebase-functions": "^4.3.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "express-validator": "^7.0.1",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}

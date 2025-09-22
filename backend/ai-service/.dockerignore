@@ -1,0 +1,121 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+venv_*/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+*.egg-info/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project specific
+*.log
+*.pid
+*.seed
+*.pid.lock
+logs/
+tmp/
+temp/
+cache/
+test_audio/
+test_data/
+tests/
+benchmarks/
+
+# Models (will be downloaded at runtime)
+*.pkl
+*.pth
+*.pt
+*.h5
+*.onnx
+*.pb
+models/
+sincnet/models/
+
+# Documentation
+*.md
+docs/
+README.*
+LICENSE
+CHANGELOG.*
+
+# Build artifacts
+build/
+dist/
+*.egg
+*.whl
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Deployment
+cloudbuild*.yaml
+deploy*.sh
+*.yaml
+*.yml
+k8s/
+helm/
+
+# Environment files (use Secret Manager instead)
+.env*
+!.env.example
+
+# Large files
+*.mp3
+*.mp4
+*.wav
+*.m4a
+*.avi
+*.mov
+*.zip
+*.tar
+*.gz
+*.rar
+
+# Development
+notebooks/
+scripts/
+setup*.py
+setup*.sh
+setup*.ps1
+Makefile
+requirements-dev.txt
+requirements-test.txt
+
+# CI/CD
+.travis.yml
+.gitlab-ci.yml
+.circleci/
+jenkins/
+
+# Backup files
+*.bak
+*.backup
+*_backup/
+backup/

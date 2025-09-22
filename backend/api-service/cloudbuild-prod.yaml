@@ -1,0 +1,94 @@
+# Cloud Build Configuration for Production Deployment
+# Chapter 5: Cloud Run with Auto-scaling
+
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-api:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-api:latest'
+      - '-f'
+      - 'Dockerfile.prod'
+      - '.'
+    dir: 'backend/api-service'
+
+  # Step 2: Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-api:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-api:latest'
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'senior-mhealth-api'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-api:$COMMIT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--min-instances'
+      - '1'
+      - '--max-instances'
+      - '100'
+      - '--concurrency'
+      - '80'
+      - '--timeout'
+      - '300'
+      - '--set-env-vars'
+      - 'ENVIRONMENT=production,PROJECT_ID=$PROJECT_ID'
+      - '--set-secrets'
+      - 'DATABASE_URL=senior-mhealth-db-url:latest'
+      - '--service-account'
+      - 'cloud-run-sa@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--vpc-connector'
+      - 'projects/$PROJECT_ID/locations/asia-northeast3/connectors/senior-mhealth-connector'
+      - '--vpc-egress'
+      - 'private-ranges-only'
+      - '--cpu-boost'
+      - '--execution-environment'
+      - 'gen2'
+
+  # Step 4: Set up traffic management
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'services'
+      - 'update-traffic'
+      - 'senior-mhealth-api'
+      - '--region'
+      - 'asia-northeast3'
+      - '--to-latest'
+
+# Build configuration
+options:
+  substitutionOption: 'ALLOW_LOOSE'
+  logging: 'CLOUD_LOGGING_ONLY'
+  machineType: 'E2_HIGHCPU_8'
+  dynamicSubstitutions: true
+
+# Substitutions
+substitutions:
+  _REGION: 'asia-northeast3'
+  _SERVICE_NAME: 'senior-mhealth-api'
+
+# Timeout for the entire build
+timeout: '1200s'

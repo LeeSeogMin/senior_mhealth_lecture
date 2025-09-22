@@ -1,0 +1,69 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 인증 확인
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 관리자 확인
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.get('role', '') == 'admin';
+    }
+    
+    // 케어기버 확인
+    function isCaregiver() {
+      return isAuthenticated() && 
+        (request.auth.token.get('role', '') == 'caregiver' || isAdmin());
+    }
+    
+    // 파일 크기 제한 (100MB)
+    function isValidSize() {
+      return request.resource.size < 100 * 1024 * 1024;
+    }
+    
+    // 오디오 파일 타입 확인
+    function isAudioFile() {
+      return request.resource.contentType.matches('audio/.*');
+    }
+    
+    // 통화 녹음 파일
+    match /calls/{seniorId}/{callId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isCaregiver() && isValidSize() && isAudioFile();
+      allow delete: if isAdmin();
+    }
+    
+    // 임시 업로드 폴더
+    match /temp/{userId}/{fileName} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && 
+        request.auth.uid == userId && 
+        isValidSize() && 
+        isAudioFile();
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // 프로필 이미지
+    match /profiles/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        request.resource.size < 5 * 1024 * 1024 && // 5MB 제한
+        request.resource.contentType.matches('image/.*');
+      allow delete: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+    }
+    
+    // 시스템 파일 (읽기 전용)
+    match /system/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    
+    // 기본값: 모든 접근 차단
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

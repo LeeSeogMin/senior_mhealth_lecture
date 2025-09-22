@@ -1,0 +1,121 @@
+# Cloud Run Service Configuration
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: voice-analysis-service
+  labels:
+    app: voice-analysis
+    environment: production
+    team: ai
+  annotations:
+    run.googleapis.com/launch-stage: GA
+    run.googleapis.com/ingress: internal-and-cloud-load-balancing
+spec:
+  template:
+    metadata:
+      annotations:
+        # Autoscaling annotations
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+        autoscaling.knative.dev/target: "80"
+        autoscaling.knative.dev/metric: "concurrency"
+        
+        # CPU and memory
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: "gen2"
+        
+        # Startup probe
+        run.googleapis.com/startup-cpu-boost: "true"
+        
+        # Network
+        run.googleapis.com/network-interfaces: '[{"network":"default","subnetwork":"default"}]'
+        
+        # GPU (optional - uncomment for GPU deployment)
+        # run.googleapis.com/gpu: "1"
+        # run.googleapis.com/accelerator: '{"type":"nvidia-l4","count":1}'
+        
+      labels:
+        app: voice-analysis
+        version: v1.0.0
+    spec:
+      # Service account
+      serviceAccountName: voice-analysis-sa@senior-mhealth-2025.iam.gserviceaccount.com
+      
+      # Container configuration
+      containers:
+      - name: voice-analysis
+        image: asia-northeast3-docker.pkg.dev/senior-mhealth-2025/ml-models/voice-analysis-service:latest
+        
+        # Resource limits
+        resources:
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+        
+        # Environment variables
+        env:
+        - name: PROJECT_ID
+          value: "senior-mhealth-2025"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: MODEL_VERSION
+          value: "v1.0.0"
+        - name: GCS_BUCKET
+          value: "senior-mhealth-models"
+        - name: ENABLE_METRICS
+          value: "true"
+        - name: ENABLE_TRACING
+          value: "true"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: VERTEX_ENDPOINT_ID
+          valueFrom:
+            secretKeyRef:
+              name: vertex-config
+              key: endpoint_id
+        
+        # Ports
+        ports:
+        - containerPort: 8080
+          name: http1
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 30
+      
+      # Timeout configuration
+      containerConcurrency: 50
+      timeoutSeconds: 300
+  
+  # Traffic configuration
+  traffic:
+  - percent: 100
+    latestRevision: true
+    tag: latest

@@ -1,0 +1,196 @@
+# AI 서비스 배포 최적화 - 목표: 20-30MB (현재 14GB → 20MB)
+# 빌드에 필요한 최소한의 파일만 포함
+
+# ===== 필수 제외 (대용량 디렉토리) =====
+frontend/
+mobile/
+setup/
+docs/
+scripts/
+build-logs/
+test/
+tests/
+examples/
+samples/
+
+# ===== Python 환경 =====
+venv/
+venv_*/
+venv_sincnet/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.env.*
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# ===== 모델 파일 (Cloud Storage에서 로드) =====
+**/*.pkl
+**/*.pt
+**/*.pth
+**/*.h5
+**/*.hdf5
+**/*.safetensors
+**/*.ckpt
+**/*.bin
+**/*.onnx
+**/*.pb
+**/*.tflite
+**/*.mlmodel
+**/models/
+**/checkpoints/
+**/weights/
+
+# ===== Node.js (불필요) =====
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.npm/
+.yarn/
+
+# ===== Git =====
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+.project
+.classpath
+.settings/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# ===== 로그 및 캐시 =====
+*.log
+logs/
+*.cache
+.cache/
+tmp/
+temp/
+
+# ===== 문서 =====
+*.md
+README*
+LICENSE*
+CHANGELOG*
+AUTHORS
+CONTRIBUTORS
+*.txt
+!requirements.txt
+!requirements-prod.txt
+
+# ===== 미디어 파일 =====
+*.mp4
+*.mp3
+*.wav
+*.avi
+*.mov
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.ico
+*.webp
+
+# ===== 데이터베이스 =====
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# ===== 보안 파일 =====
+**/serviceAccountKey.json
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+credentials/
+secrets/
+
+# ===== 백업 파일 =====
+*.bak
+*.backup
+*.old
+*.orig
+*~
+
+# ===== 압축 파일 =====
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# ===== Flutter/Dart =====
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+*.iml
+*.ipr
+*.iws
+
+# ===== Android =====
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+local.properties
+/captures/
+
+# ===== iOS =====
+*.ipa
+*.dSYM.zip
+*.dSYM
+Pods/
+
+# ===== 대용량 바이너리 =====
+**/ffmpeg*/
+**/*.exe
+**/*.dll
+**/*.so
+**/*.dylib
+
+# ===== Jupyter =====
+.ipynb_checkpoints/
+*.ipynb
+
+# ===== 특정 대용량 라이브러리 제외 =====
+**/torch/
+**/tensorflow/
+**/transformers/
+**/cuda/
+**/cudnn/

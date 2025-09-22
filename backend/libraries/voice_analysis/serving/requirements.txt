@@ -1,0 +1,45 @@
+# FastAPI and server
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-multipart==0.0.18
+
+# Google Cloud
+google-cloud-storage==2.20.0
+google-cloud-aiplatform==1.75.0
+google-cloud-logging==3.11.3
+google-cloud-monitoring==2.24.0
+
+# ML and audio processing
+torch==2.5.1
+torchaudio==2.5.1
+librosa==0.10.2.post1
+numpy==1.26.4
+scipy==1.14.1
+soundfile==0.12.1
+
+# Async and HTTP
+httpx==0.28.1
+aiofiles==24.1.0
+asyncio==3.4.3
+
+# Monitoring and metrics
+prometheus-client==0.21.1
+opentelemetry-api==1.29.0
+opentelemetry-sdk==1.29.0
+opentelemetry-instrumentation-fastapi==0.50b0
+opentelemetry-exporter-gcp-trace==1.11.0
+
+# Utilities
+python-json-logger==3.2.0
+psutil==6.1.0
+redis==5.2.1
+python-dotenv==1.0.1
+
+# Development (optional)
+pytest==8.3.4
+pytest-asyncio==0.25.0
+black==24.10.0
+isort==5.13.2
+mypy==1.13.0

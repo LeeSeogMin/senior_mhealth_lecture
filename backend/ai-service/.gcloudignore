@@ -1,0 +1,62 @@
+# Backend AI Service specific .gcloudignore
+# This keeps only essential files for the AI service
+
+# Include default .gcloudignore
+.gcloudignore
+
+# Exclude everything first
+*
+
+# Then include only what we need
+!app/**
+!*.py
+!requirements*.txt
+!start.sh
+!Dockerfile*
+!cloudbuild*.yaml
+
+# But exclude Python cache
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/*.py[cod]
+**/*$py.class
+
+# Exclude test files
+**/test_*
+**/*_test.py
+**/tests/
+
+# Exclude model files (loaded from GCS)
+**/*.pkl
+**/*.pt
+**/*.pth
+**/*.h5
+**/*.bin
+**/*.safetensors
+
+# Exclude logs
+**/*.log
+**/logs/
+
+# Exclude temp files
+**/tmp/
+**/temp/
+**/*.tmp
+
+# Exclude version control
+.git/
+.gitignore
+
+# Exclude IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Exclude documentation
+*.md
+README*
+LICENSE*

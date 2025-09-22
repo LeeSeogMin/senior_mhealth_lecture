@@ -1,0 +1,12 @@
+{"users": [
+{
+  "localId": "0n1wMwFR3Re4JP7sFxC0quhNSS83",
+  "email": "newmind68@hs.ac.kr",
+  "emailVerified": false,
+  "passwordHash": "InmXEQXvwDBqLG1pr3R+2vRizw/zChIBjGVp996HAMWu4UTJ0BRdYpZdJcjfm51eauxAgHM6fbjFi48o0A6clQ==",
+  "salt": "FUpLAaX7ncp79Q==",
+  "displayName": "이석민",
+  "lastSignedInAt": "1755431932518",
+  "createdAt": "1755431932518",
+  "providerUserInfo": []
+}]}

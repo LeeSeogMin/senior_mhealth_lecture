@@ -1,0 +1,74 @@
+# Python 가상환경
+venv/
+env/
+ENV/
+.env
+
+# Python 캐시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 로그 파일
+*.log
+
+# 테스트 관련
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# VS Code 설정
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# 환경변수와 민감 정보 파일
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+credentials.json
+service-account.json
+
+# 테스트 오디오 파일
+test_audio/
+*.wav
+*.mp3
+*.flac
+*.ogg
+
+# 모델 파일 (용량이 큰 파일은 별도 관리)
+*.pkl
+*.h5
+*.model
+models/
+
+# 기타 무시할 파일
+.DS_Store
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: senior-mhealth-ai
+    ports:
+      - "8081:8081"
+    environment:
+      # Google Cloud
+      - GOOGLE_CLOUD_PROJECT=senior-mhealth-472007
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/serviceAccountKey.json
+      
+      # AI API Keys (set these in .env file)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      
+      # Service Configuration
+      - ENVIRONMENT=production
+      - USE_RAG=true
+      - PYTHONUNBUFFERED=1
+      
+      # SincNet Configuration
+      - FFMPEG_PATH=/usr/bin/ffmpeg
+      - SINCNET_MODEL_DIR=/app/models
+      
+      # Performance
+      - MAX_WORKERS=4
+      - TIMEOUT_SECONDS=300
+      - LOG_LEVEL=INFO
+      
+    volumes:
+      # Service account key
+      - ../serviceAccountKey.json:/app/serviceAccountKey.json:ro
+      
+      # SincNet models cache
+      - ./libraries/voice_analysis/analysis/sincnet/models:/app/models:rw
+      
+      # Logs
+      - ./logs:/app/logs:rw
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+          
+networks:
+  default:
+    name: senior-mhealth-network
+    external: false

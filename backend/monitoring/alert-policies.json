@@ -1,0 +1,141 @@
+[
+  {
+    "displayName": "ETL Function High Error Rate",
+    "documentation": {
+      "content": "ETL function error rate exceeds 5% threshold. Check function logs and investigate root cause.",
+      "mimeType": "text/markdown"
+    },
+    "conditions": [
+      {
+        "displayName": "ETL Function Error Rate > 5%",
+        "conditionThreshold": {
+          "filter": "resource.type=\"cloud_function\" AND resource.labels.function_name=~\"firestore-to-sql.*|sql-to-bigquery.*\" AND metric.type=\"cloudfunctions.googleapis.com/function/execution_count\"",
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "perSeriesAligner": "ALIGN_RATE",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "groupByFields": ["resource.labels.function_name", "metric.labels.status"]
+            }
+          ],
+          "comparison": "COMPARISON_GREATER_THAN",
+          "thresholdValue": 0.05,
+          "duration": "300s",
+          "evaluationMissingData": "EVALUATION_MISSING_DATA_INACTIVE"
+        }
+      }
+    ],
+    "combiner": "OR",
+    "enabled": true,
+    "alertStrategy": {
+      "autoClose": "1800s"
+    }
+  },
+  {
+    "displayName": "ETL Function High Latency",
+    "documentation": {
+      "content": "ETL function execution time exceeds 5 minutes. Check for performance bottlenecks and database connectivity.",
+      "mimeType": "text/markdown"
+    },
+    "conditions": [
+      {
+        "displayName": "ETL Function Latency > 5 minutes",
+        "conditionThreshold": {
+          "filter": "resource.type=\"cloud_function\" AND resource.labels.function_name=~\"firestore-to-sql.*|sql-to-bigquery.*\" AND metric.type=\"cloudfunctions.googleapis.com/function/execution_times\"",
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "perSeriesAligner": "ALIGN_PERCENTILE_95",
+              "crossSeriesReducer": "REDUCE_MEAN",
+              "groupByFields": ["resource.labels.function_name"]
+            }
+          ],
+          "comparison": "COMPARISON_GREATER_THAN",
+          "thresholdValue": 300000,
+          "duration": "300s"
+        }
+      }
+    ],
+    "combiner": "OR",
+    "enabled": true
+  },
+  {
+    "displayName": "Cloud SQL High Connection Count",
+    "documentation": {
+      "content": "Cloud SQL connection count exceeds safe threshold. Check for connection leaks in ETL functions.",
+      "mimeType": "text/markdown"
+    },
+    "conditions": [
+      {
+        "displayName": "Cloud SQL Connections > 80",
+        "conditionThreshold": {
+          "filter": "resource.type=\"cloudsql_database\" AND resource.labels.database_id=\"senior-mhealth-472007:asia-northeast3:senior-mhealth-postgres\" AND metric.type=\"cloudsql.googleapis.com/database/postgresql/num_backends\"",
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "perSeriesAligner": "ALIGN_MEAN"
+            }
+          ],
+          "comparison": "COMPARISON_GREATER_THAN",
+          "thresholdValue": 80,
+          "duration": "600s"
+        }
+      }
+    ],
+    "combiner": "OR",
+    "enabled": true
+  },
+  {
+    "displayName": "Data Freshness Alert",
+    "documentation": {
+      "content": "BigQuery data is stale (>4 hours old). Check batch ETL function and Cloud Scheduler.",
+      "mimeType": "text/markdown"
+    },
+    "conditions": [
+      {
+        "displayName": "Data Age > 4 hours",
+        "conditionThreshold": {
+          "filter": "resource.type=\"gce_instance\" AND metric.type=\"custom.googleapis.com/etl/data_freshness_hours\"",
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "perSeriesAligner": "ALIGN_MEAN"
+            }
+          ],
+          "comparison": "COMPARISON_GREATER_THAN",
+          "thresholdValue": 4,
+          "duration": "300s"
+        }
+      }
+    ],
+    "combiner": "OR",
+    "enabled": true
+  },
+  {
+    "displayName": "BigQuery Job Failures",
+    "documentation": {
+      "content": "BigQuery jobs are failing. Check job logs and data validation.",
+      "mimeType": "text/markdown"
+    },
+    "conditions": [
+      {
+        "displayName": "BigQuery Job Error Rate > 10%",
+        "conditionThreshold": {
+          "filter": "resource.type=\"bigquery_project\" AND metric.type=\"bigquery.googleapis.com/job/num_failed\"",
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "perSeriesAligner": "ALIGN_RATE",
+              "crossSeriesReducer": "REDUCE_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GREATER_THAN",
+          "thresholdValue": 0.1,
+          "duration": "300s"
+        }
+      }
+    ],
+    "combiner": "OR",
+    "enabled": true
+  }
+]

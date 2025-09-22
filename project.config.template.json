@@ -1,0 +1,62 @@
+{
+  "project": {
+    "id": "senior-mhealth-472007",
+    "name": "Senior MHealth",
+    "region": "asia-northeast3",
+    "location": "asia-northeast3"
+  },
+  "firebase": {
+    "projectId": "senior-mhealth-472007",
+    "storageBucket": "senior-mhealth-472007.firebasestorage.app",
+    "messagingSenderId": "1054806937473",
+    "appId": "1:1054806937473:web:xxxxxxxxxxxxxxxx",
+    "apiKey": "AIzaSyCxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "cloud": {
+    "projectNumber": "1054806937473",
+    "serviceAccountEmail": "firebase-adminsdk-xxxxx@senior-mhealth-472007.iam.gserviceaccount.com",
+    "cloudRunServiceAccount": "cloud-run-sa@senior-mhealth-472007.iam.gserviceaccount.com"
+  },
+  "database": {
+    "cloudSqlConnectionName": "senior-mhealth-472007:asia-northeast3:senior-mhealth-db",
+    "cloudSqlInstance": "senior-mhealth-db",
+    "bigQueryDataset": "senior_mhealth_analytics"
+  },
+  "networking": {
+    "vpcConnector": "projects/senior-mhealth-472007/locations/asia-northeast3/connectors/senior-mhealth-connector",
+    "vpcConnectorName": "senior-mhealth-connector"
+  },
+  "services": {
+    "aiService": {
+      "name": "senior-mhealth-ai",
+      "url": "https://senior-mhealth-ai-du6z6zbl2a-du.a.run.app"
+    },
+    "apiService": {
+      "name": "senior-mhealth-api",
+      "url": "https://senior-mhealth-api-1054806937473.asia-northeast3.run.app"
+    },
+    "webApp": {
+      "url": "https://senior-mhealth.vercel.app"
+    }
+  },
+  "monitoring": {
+    "grafanaWorkspace": "senior-mhealth-monitoring",
+    "alertManagerEmail": "admin@senior-mhealth.com"
+  },
+  "deployment": {
+    "environment": "production",
+    "dockerRegistry": "gcr.io/senior-mhealth-472007",
+    "artifactRegistry": "asia-northeast3-docker.pkg.dev/senior-mhealth-472007/senior-mhealth"
+  },
+  "security": {
+    "corsOrigins": [
+      "https://senior-mhealth.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:3001"
+    ],
+    "allowedDomains": [
+      "senior-mhealth-472007.firebaseapp.com",
+      "senior-mhealth.vercel.app"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+backend
+frontend/mobile
+scripts
+setup
+.github
+*.md
+!frontend/web

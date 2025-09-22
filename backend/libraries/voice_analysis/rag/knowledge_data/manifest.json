@@ -1,0 +1,237 @@
+{
+  "source_dir": "../../../../../../ai/analysis/knowledge_data",
+  "model": "text-embedding-3-small",
+  "generated_at": "2025-08-23T12:00:20.648159Z",
+  "files": {
+    "README.md": {
+      "num_chunks": 3,
+      "total_chars": 4499,
+      "created": "2025-08-23T12:00:24.831725Z"
+    },
+    "assessment_tools\\aggression_k_bpaq.json": {
+      "num_chunks": 1,
+      "total_chars": 319,
+      "created": "2025-08-23T12:00:25.723451Z"
+    },
+    "assessment_tools\\anxiety_addendum_ko.json": {
+      "num_chunks": 1,
+      "total_chars": 252,
+      "created": "2025-08-23T12:00:29.079871Z"
+    },
+    "assessment_tools\\anxiety_assessment.json": {
+      "num_chunks": 8,
+      "total_chars": 15443,
+      "created": "2025-08-23T12:00:33.921021Z"
+    },
+    "assessment_tools\\behavioral_addictions_digital.json": {
+      "num_chunks": 1,
+      "total_chars": 1023,
+      "created": "2025-08-23T12:00:34.774929Z"
+    },
+    "assessment_tools\\cognitive_assessment.json": {
+      "num_chunks": 5,
+      "total_chars": 8398,
+      "created": "2025-08-23T12:00:37.279537Z"
+    },
+    "assessment_tools\\depression_scales.json": {
+      "num_chunks": 3,
+      "total_chars": 5302,
+      "created": "2025-08-23T12:00:38.257422Z"
+    },
+    "assessment_tools\\depression_scales_addendum_ko.json": {
+      "num_chunks": 1,
+      "total_chars": 1296,
+      "created": "2025-08-23T12:00:39.080808Z"
+    },
+    "assessment_tools\\drug_abuse_dast_korean.json": {
+      "num_chunks": 1,
+      "total_chars": 276,
+      "created": "2025-08-23T12:00:39.491815Z"
+    },
+    "assessment_tools\\gambling_assessment_k.json": {
+      "num_chunks": 1,
+      "total_chars": 908,
+      "created": "2025-08-23T12:00:39.879485Z"
+    },
+    "assessment_tools\\impulsivity_kbis_11.json": {
+      "num_chunks": 1,
+      "total_chars": 254,
+      "created": "2025-08-23T12:00:40.482655Z"
+    },
+    "assessment_tools\\nicotine_dependence_ftnd_hsi.json": {
+      "num_chunks": 1,
+      "total_chars": 414,
+      "created": "2025-08-23T12:00:40.813290Z"
+    },
+    "assessment_tools\\pediatric_anxiety_pswq_ck.json": {
+      "num_chunks": 1,
+      "total_chars": 395,
+      "created": "2025-08-23T12:00:41.087683Z"
+    },
+    "assessment_tools\\self_esteem_rses.json": {
+      "num_chunks": 1,
+      "total_chars": 296,
+      "created": "2025-08-23T12:00:41.429656Z"
+    },
+    "assessment_tools\\sleep_insomnia_isi_k.json": {
+      "num_chunks": 1,
+      "total_chars": 197,
+      "created": "2025-08-23T12:00:41.713031Z"
+    },
+    "assessment_tools\\stress_pss.json": {
+      "num_chunks": 1,
+      "total_chars": 217,
+      "created": "2025-08-23T12:00:41.975504Z"
+    },
+    "assessment_tools\\substance_use_alcohol.json": {
+      "num_chunks": 1,
+      "total_chars": 1228,
+      "created": "2025-08-23T12:00:42.346970Z"
+    },
+    "assessment_tools\\whoqol_bref_korean.json": {
+      "num_chunks": 1,
+      "total_chars": 216,
+      "created": "2025-08-23T12:00:42.828824Z"
+    },
+    "assessment_tools\\youth_sdq_korean.json": {
+      "num_chunks": 1,
+      "total_chars": 332,
+      "created": "2025-08-23T12:00:43.104247Z"
+    },
+    "clinical_cases\\cognitive_decline_cases.json": {
+      "num_chunks": 5,
+      "total_chars": 9341,
+      "created": "2025-08-23T12:00:45.057803Z"
+    },
+    "clinical_cases\\depression_cases.json": {
+      "num_chunks": 7,
+      "total_chars": 13541,
+      "created": "2025-08-23T12:00:47.844324Z"
+    },
+    "clinical_cases\\subjective_health_cases.json": {
+      "num_chunks": 3,
+      "total_chars": 5141,
+      "created": "2025-08-23T12:00:48.895456Z"
+    },
+    "cultural_context\\korean_elderly_culture.json": {
+      "num_chunks": 4,
+      "total_chars": 7300,
+      "created": "2025-08-23T12:00:50.092709Z"
+    },
+    "enhanced_data_categories.md": {
+      "num_chunks": 2,
+      "total_chars": 2611,
+      "created": "2025-08-23T12:00:50.972858Z"
+    },
+    "integrated_insights.json": {
+      "num_chunks": 5,
+      "total_chars": 8976,
+      "created": "2025-08-23T12:00:53.121901Z"
+    },
+    "language_analysis\\language_emotion_patterns.json": {
+      "num_chunks": 8,
+      "total_chars": 15481,
+      "created": "2025-08-23T12:00:55.755658Z"
+    },
+    "language_analysis\\semantic_analysis.json": {
+      "num_chunks": 6,
+      "total_chars": 10618,
+      "created": "2025-08-23T12:00:57.598864Z"
+    },
+    "operational_guidelines.json": {
+      "num_chunks": 5,
+      "total_chars": 8266,
+      "created": "2025-08-23T12:00:59.392799Z"
+    },
+    "rag_application_templates.json": {
+      "num_chunks": 6,
+      "total_chars": 10976,
+      "created": "2025-08-23T12:01:01.207056Z"
+    },
+    "research_metadata.json": {
+      "num_chunks": 3,
+      "total_chars": 4644,
+      "created": "2025-08-23T12:01:02.518397Z"
+    },
+    "research_papers\\clinical_guidelines.json": {
+      "num_chunks": 3,
+      "total_chars": 5444,
+      "created": "2025-08-23T12:01:03.567065Z"
+    },
+    "research_papers\\correlation_phq9_madrs_elderly_education.json": {
+      "num_chunks": 3,
+      "total_chars": 4872,
+      "created": "2025-08-23T12:01:04.951935Z"
+    },
+    "research_papers\\correlation_studies.json": {
+      "num_chunks": 2,
+      "total_chars": 2611,
+      "created": "2025-08-23T12:01:05.556976Z"
+    },
+    "research_papers\\dementia_early_detection_dsmiv_practice.json": {
+      "num_chunks": 4,
+      "total_chars": 7660,
+      "created": "2025-08-23T12:01:07.081234Z"
+    },
+    "research_papers\\emotion_analysis_research.txt": {
+      "num_chunks": 1,
+      "total_chars": 1822,
+      "created": "2025-08-23T12:01:07.566194Z"
+    },
+    "research_papers\\hrqol_knhanesV_2010_2012.json": {
+      "num_chunks": 3,
+      "total_chars": 5716,
+      "created": "2025-08-23T12:01:08.626288Z"
+    },
+    "research_papers\\knhanes2018_elderly_depression_risk.json": {
+      "num_chunks": 4,
+      "total_chars": 6265,
+      "created": "2025-08-23T12:01:10.012798Z"
+    },
+    "research_papers\\living_arrangements_depression_knhanes_2018_2020.json": {
+      "num_chunks": 3,
+      "total_chars": 5116,
+      "created": "2025-08-23T12:01:10.991239Z"
+    },
+    "research_papers\\mmse_profiles_kmmse_disorder_2019_2021.json": {
+      "num_chunks": 2,
+      "total_chars": 3248,
+      "created": "2025-08-23T12:01:11.765004Z"
+    },
+    "research_papers\\subjective_health_lowincome_alone_2018.json": {
+      "num_chunks": 4,
+      "total_chars": 6601,
+      "created": "2025-08-23T12:01:12.912025Z"
+    },
+    "risk_assessment\\depression_risk_factors.json": {
+      "num_chunks": 2,
+      "total_chars": 3949,
+      "created": "2025-08-23T12:01:13.579191Z"
+    },
+    "risk_assessment\\suicide_risk_factors.json": {
+      "num_chunks": 9,
+      "total_chars": 17671,
+      "created": "2025-08-23T12:01:16.446302Z"
+    },
+    "voice_analysis\\acoustic_features.json": {
+      "num_chunks": 10,
+      "total_chars": 18252,
+      "created": "2025-08-23T12:01:19.845505Z"
+    },
+    "voice_analysis\\prosody_patterns.json": {
+      "num_chunks": 6,
+      "total_chars": 10426,
+      "created": "2025-08-23T12:01:21.744178Z"
+    },
+    "voice_analysis\\voice_emotion_patterns.json": {
+      "num_chunks": 11,
+      "total_chars": 21393,
+      "created": "2025-08-23T12:01:25.336881Z"
+    },
+    "voice_emotion_patterns.txt": {
+      "num_chunks": 2,
+      "total_chars": 3080,
+      "created": "2025-08-23T12:01:26.233325Z"
+    }
+  }
+}

@@ -1,0 +1,416 @@
+/**
+ * 2chp.md 기반 Firestore 보안 규칙
+ * 다중 사용자 타입별 접근 제어 시스템
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // 사용자 프로필 접근 제어
+    // ==========================================
+    match /users/{userId} {
+      allow read: if isAuthenticated() && 
+        (isOwner(userId) || 
+         hasPermission("admin:access") ||
+         isCaregiverOf(userId) ||
+         isMedicalProfessional());
+         
+      allow write: if isAuthenticated() && 
+        (isOwner(userId) || 
+         hasPermission("admin:access"));
+         
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+    }
+    
+    // ==========================================
+    // 시니어 프로필 접근 제어
+    // ==========================================
+    match /seniors/{seniorId} {
+      allow read: if isAuthenticated() && 
+        (isCaregiverOf(seniorId) ||
+         canAccessSenior(seniorId) ||
+         hasPermission("admin:access"));
+         
+      allow write: if isAuthenticated() && 
+        (isCaregiverOf(seniorId) ||
+         hasPermission("admin:access"));
+         
+      allow create: if isAuthenticated() && 
+        (hasPermission("manage:senior_profile") ||
+         hasPermission("admin:access"));
+    }
+    
+    // ==========================================
+    // 돌봄 관계 관리
+    // ==========================================
+    match /care_relationships/{relationshipId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.caregiverId == request.auth.uid ||
+         resource.data.seniorId == request.auth.uid ||
+         hasPermission("admin:access"));
+         
+      allow write: if isAuthenticated() && 
+        (resource.data.caregiverId == request.auth.uid ||
+         hasPermission("admin:access"));
+         
+      allow create: if isAuthenticated() && 
+        (request.resource.data.caregiverId == request.auth.uid ||
+         hasPermission("admin:access"));
+    }
+    
+    // ==========================================
+    // 실시간 세션 데이터
+    // ==========================================
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid ||
+         isCaregiverOf(resource.data.seniorId) ||
+         canAccessSenior(resource.data.seniorId) ||
+         hasPermission("admin:access"));
+         
+      allow write: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid ||
+         isCaregiverOf(resource.data.seniorId) ||
+         hasPermission("admin:access"));
+         
+      allow create: if isAuthenticated() && 
+        (request.resource.data.userId == request.auth.uid ||
+         hasPermission("system:service"));
+    }
+    
+    // ==========================================
+    // 시스템 메시지 (알림 중심)
+    // ==========================================
+    match /system_messages/{messageId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.caregiverId == request.auth.uid ||
+         isCaregiverOf(resource.data.seniorId) ||
+         canAccessSenior(resource.data.seniorId) ||
+         hasPermission("admin:access"));
+         
+      allow write: if isAuthenticated() && 
+        (resource.data.caregiverId == request.auth.uid ||
+         hasPermission("send:notifications") ||
+         hasPermission("system:service"));
+         
+      allow create: if isAuthenticated() && 
+        (hasPermission("send:notifications") ||
+         hasPermission("system:service") ||
+         isSystemService());
+    }
+    
+    // ==========================================
+    // 실시간 알림
+    // ==========================================
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+        
+      allow write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+        
+      allow create: if isAuthenticated() && 
+        (hasPermission("send:notifications") ||
+         hasPermission("system:service") ||
+         isSystemService());
+    }
+    
+    // ==========================================
+    // 실시간 생체 지표
+    // ==========================================
+    match /live_metrics/{metricId} {
+      allow read: if isAuthenticated() && 
+        (isCaregiverOf(resource.data.seniorId) ||
+         canAccessSenior(resource.data.seniorId) ||
+         hasPermission("admin:access"));
+         
+      allow write: if isAuthenticated() && 
+        (hasPermission("system:service") ||
+         isSystemService());
+         
+      allow create: if isAuthenticated() && 
+        (hasPermission("system:service") ||
+         isSystemService());
+    }
+    
+    // ==========================================
+    // 통화 기록 (calls 컬렉션)
+    // ==========================================
+    // users/{userId}/calls/{callId} 경로 처리
+    match /users/{userId}/calls/{callId} {
+      allow read: if isAuthenticated() &&
+        (isOwner(userId) ||
+         hasPermission("admin:access"));
+
+      allow write: if isAuthenticated() &&
+        (isOwner(userId) ||
+         hasPermission("admin:access"));
+
+      allow create: if isAuthenticated() &&
+        isOwner(userId);
+    }
+
+    // calls/{callId} 최상위 컬렉션
+    match /calls/{callId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid ||
+         resource.data.caregiverId == request.auth.uid ||
+         isCaregiverOf(resource.data.seniorId) ||
+         canAccessSenior(resource.data.seniorId) ||
+         hasPermission("admin:access"));
+
+      allow write: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid ||
+         resource.data.caregiverId == request.auth.uid ||
+         hasPermission("system:service") ||
+         hasPermission("admin:access"));
+
+      allow create: if isAuthenticated() &&
+        (request.resource.data.userId == request.auth.uid ||
+         request.resource.data.caregiverId == request.auth.uid ||
+         hasPermission("system:service"));
+    }
+
+    // ==========================================
+    // AI 분석 결과
+    // ==========================================
+    match /analyses/{analysisId} {
+      allow read: if isAuthenticated() &&
+        (isCaregiverOf(resource.data.seniorId) ||
+         canAccessSenior(resource.data.seniorId) ||
+         hasPermission("admin:access"));
+
+      allow write: if isAuthenticated() &&
+        (hasPermission("system:service") ||
+         hasPermission("create:analysis") ||
+         isSystemService());
+
+      allow create: if isAuthenticated() &&
+        (hasPermission("system:service") ||
+         hasPermission("create:analysis") ||
+         isSystemService());
+    }
+
+    // ==========================================
+    // 사용자별 분석 결과 (users/{userId}/analyses)
+    // ==========================================
+    match /users/{userId}/analyses/{analysisId} {
+      allow read: if isAuthenticated() &&
+        (isOwner(userId) ||
+         hasPermission("admin:access"));
+
+      allow write: if isAuthenticated() &&
+        (isOwner(userId) ||
+         hasPermission("admin:access") ||
+         hasPermission("system:service"));
+
+      allow create: if isAuthenticated() &&
+        (isOwner(userId) ||
+         hasPermission("system:service"));
+    }
+    
+    // ==========================================
+    // 의료 기록 (의료진 전용) - Mission 4 요구사항
+    // ==========================================
+    match /medical_records/{recordId} {
+      allow read: if isAuthenticated() && 
+        ((isMedicalProfessional() &&
+          hasPermission("access:medical_records") &&
+          canAccessSenior(resource.data.seniorId)) ||
+         hasPermission("admin:access"));
+         
+      allow write: if isAuthenticated() && 
+        ((isMedicalProfessional() &&
+          hasPermission("write:medical_notes") &&
+          canAccessSenior(resource.data.seniorId)) ||
+         hasPermission("admin:access"));
+         
+      allow create: if isAuthenticated() && 
+        ((isMedicalProfessional() &&
+          hasPermission("write:medical_notes")) ||
+         hasPermission("admin:access"));
+    }
+    
+    // ==========================================
+    // 상담 기록 (상담사 전용) - Mission 4 요구사항
+    // ==========================================
+    match /counseling_records/{recordId} {
+      allow read: if isAuthenticated() && 
+        ((isCounselor() &&
+          hasPermission("read:counseling_data") &&
+          canAccessSenior(resource.data.seniorId)) ||
+         hasPermission("admin:access"));
+         
+      allow write: if isAuthenticated() && 
+        ((isCounselor() &&
+          hasPermission("write:counseling_notes") &&
+          canAccessSenior(resource.data.seniorId)) ||
+         hasPermission("admin:access"));
+         
+      allow create: if isAuthenticated() && 
+        ((isCounselor() &&
+          hasPermission("write:counseling_notes")) ||
+         hasPermission("admin:access"));
+    }
+    
+    // ==========================================
+    // 의료 데이터 (의료진 전용) - 기존 컬렉션 유지
+    // ==========================================
+    match /medical_data/{recordId} {
+      allow read: if isAuthenticated() && 
+        (isMedicalProfessional() &&
+         hasPermission("access:medical_records") &&
+         canAccessSenior(resource.data.seniorId));
+         
+      allow write: if isAuthenticated() && 
+        (isMedicalProfessional() &&
+         hasPermission("write:medical_notes") &&
+         canAccessSenior(resource.data.seniorId));
+         
+      allow create: if isAuthenticated() && 
+        (isMedicalProfessional() &&
+         hasPermission("write:medical_notes"));
+    }
+    
+    // ==========================================
+    // 상담 데이터 (상담사 전용)
+    // ==========================================
+    match /counseling_data/{recordId} {
+      allow read: if isAuthenticated() && 
+        (isCounselor() &&
+         hasPermission("read:counseling_data") &&
+         canAccessSenior(resource.data.seniorId));
+         
+      allow write: if isAuthenticated() && 
+        (isCounselor() &&
+         hasPermission("write:counseling_notes") &&
+         canAccessSenior(resource.data.seniorId));
+         
+      allow create: if isAuthenticated() && 
+        (isCounselor() &&
+         hasPermission("write:counseling_notes"));
+    }
+    
+    // ==========================================
+    // 응급 상황 데이터 (특별 권한)
+    // ==========================================
+    match /emergency/{emergencyId} {
+      allow read: if isAuthenticated() && 
+        (hasPermission("emergency:access") ||
+         isEmergencyContact(resource.data.seniorId) ||
+         isCaregiverOf(resource.data.seniorId) ||
+         canAccessSenior(resource.data.seniorId));
+         
+      allow create: if isAuthenticated();
+      
+      allow write: if isAuthenticated() && 
+        (hasPermission("emergency:access") ||
+         hasPermission("admin:access"));
+    }
+    
+    // ==========================================
+    // 관리자 알림
+    // ==========================================
+    match /admin_notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+        hasPermission("admin:access");
+        
+      allow write: if isAuthenticated() && 
+        hasPermission("admin:access");
+        
+      allow create: if isAuthenticated();
+    }
+    
+    // ==========================================
+    // 보안 함수들
+    // ==========================================
+    
+    /**
+     * 기본 인증 확인
+     */
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    /**
+     * 사용자 타입 확인
+     */
+    function getUserType() {
+      return request.auth.token.userType;
+    }
+    
+    /**
+     * 사용자 소유권 확인
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    /**
+     * 권한 확인 - 권한 배열에서 특정 권한 확인
+     */
+    function hasPermission(permission) {
+      return request.auth.token.permissions != null &&
+        request.auth.token.permissions.hasAny([permission]);
+    }
+    
+    /**
+     * 보호자 여부 및 시니어 관리 권한 확인
+     */
+    function isCaregiverOf(seniorId) {
+      return getUserType() == "caregiver" && 
+        request.auth.token.managedSeniors != null &&
+        request.auth.token.managedSeniors.hasAny([seniorId]);
+    }
+    
+    /**
+     * 시니어 관리 권한 확인 (별칭 함수)
+     */
+    function isManagingSenior(seniorId) {
+      return isCaregiverOf(seniorId);
+    }
+    
+    /**
+     * 의료진 여부 및 라이선스 확인
+     */
+    function isMedicalProfessional() {
+      return getUserType() == "medical_professional" &&
+        request.auth.token.license == "verified";
+    }
+    
+    /**
+     * 상담사 여부 및 인증 확인
+     */
+    function isCounselor() {
+      return getUserType() == "counselor" &&
+        request.auth.token.certification == "verified";
+    }
+    
+    /**
+     * 시니어 접근 권한 확인 (의료진/상담사용)
+     */
+    function canAccessSenior(seniorId) {
+      return (getUserType() == "medical_professional" || 
+              getUserType() == "counselor") &&
+        request.auth.token.accessibleSeniors != null &&
+        request.auth.token.accessibleSeniors.hasAny([seniorId]);
+    }
+    
+    /**
+     * 시스템 서비스 여부 확인
+     */
+    function isSystemService() {
+      return hasPermission("system:service");
+    }
+    
+    /**
+     * 응급 연락망 확인
+     */
+    function isEmergencyContact(seniorId) {
+      return hasPermission("emergency:access");
+    }
+  }
+}

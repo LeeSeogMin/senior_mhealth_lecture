@@ -1,0 +1,100 @@
+[
+  {
+    "name": "model_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Unique identifier for the model"
+  },
+  {
+    "name": "model_version",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Version string of the model"
+  },
+  {
+    "name": "trained_at",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "Timestamp when the model was trained"
+  },
+  {
+    "name": "architecture",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Model architecture: whisper_gpt4, whisper_finetuned, multimodal_transformer"
+  },
+  {
+    "name": "training_samples",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of training samples used"
+  },
+  {
+    "name": "epochs",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of training epochs"
+  },
+  {
+    "name": "learning_rate",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Learning rate used during training"
+  },
+  {
+    "name": "metrics",
+    "type": "RECORD",
+    "mode": "NULLABLE",
+    "description": "Performance metrics",
+    "fields": [
+      {
+        "name": "train_loss",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Training loss"
+      },
+      {
+        "name": "val_loss",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Validation loss"
+      },
+      {
+        "name": "depression_mae",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Mean Absolute Error for depression prediction"
+      },
+      {
+        "name": "anxiety_mae",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Mean Absolute Error for anxiety prediction"
+      },
+      {
+        "name": "cognitive_mae",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Mean Absolute Error for cognitive prediction"
+      },
+      {
+        "name": "overall_accuracy",
+        "type": "FLOAT",
+        "mode": "NULLABLE",
+        "description": "Overall model accuracy"
+      }
+    ]
+  },
+  {
+    "name": "deployment_status",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Deployment status: testing, canary, production, retired"
+  },
+  {
+    "name": "deployment_timestamp",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "description": "Timestamp when the model was deployed"
+  }
+]

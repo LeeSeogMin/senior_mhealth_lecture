@@ -1,0 +1,144 @@
+# Cloud Build configuration for AI Analysis Service
+# This file automates the build and deployment process to Cloud Run
+
+steps:
+  # Step 0: Deploy models to GCS (if changed)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Check if model files changed
+        if git diff --name-only HEAD^ HEAD | grep -E "(embeddings\.jsonl|\.pth|\.pt|\.h5)"; then
+          echo "Model files changed, uploading to GCS..."
+          bash backend/scripts/deploy-models-to-gcs.sh production
+        else
+          echo "No model changes detected, skipping upload"
+        fi
+    id: 'deploy-models'
+
+  # Step 1: Build the AI service Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-ai:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-ai:latest'
+      - '-f'
+      - 'backend/ai-service/Dockerfile'
+      - 'backend/ai-service'
+    id: 'build-ai-service'
+    waitFor: ['deploy-models']
+
+  # Step 2: Push the image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-ai:$COMMIT_SHA'
+    id: 'push-ai-service-versioned'
+    waitFor: ['build-ai-service']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-ai:latest'
+    id: 'push-ai-service-latest'
+    waitFor: ['build-ai-service']
+
+  # Step 3: Deploy to Cloud Run (AI Service)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'senior-mhealth-ai'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-ai:$COMMIT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--memory'
+      - '4Gi'
+      - '--cpu'
+      - '2'
+      - '--timeout'
+      - '300'
+      - '--concurrency'
+      - '10'
+      - '--max-instances'
+      - '5'
+      - '--min-instances'
+      - '0'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'GOOGLE_CLOUD_PROJECT=$PROJECT_ID,ENVIRONMENT=production,USE_RAG=true'
+      - '--set-secrets'
+      - 'OPENAI_API_KEY=openai-api-key:latest,GEMINI_API_KEY=gemini-api-key:latest'
+    id: 'deploy-ai-service'
+    waitFor: ['push-ai-service-versioned']
+
+  # Step 4: Deploy API Gateway (if changed)
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-api:$COMMIT_SHA'
+      - '-f'
+      - 'backend/api-service/Dockerfile.prod'
+      - 'backend/api-service'
+    id: 'build-api-service'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-api:$COMMIT_SHA'
+    id: 'push-api-service'
+    waitFor: ['build-api-service']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'senior-mhealth-api'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/senior-mhealth-api:$COMMIT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '60'
+      - '--concurrency'
+      - '80'
+      - '--max-instances'
+      - '10'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'GOOGLE_CLOUD_PROJECT=$PROJECT_ID,AI_SERVICE_URL=https://senior-mhealth-ai-xxxxx-an.a.run.app,ENVIRONMENT=production'
+    id: 'deploy-api-service'
+    waitFor: ['push-api-service']
+
+# Build configuration options
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: 'CLOUD_LOGGING_ONLY'
+  
+# Substitutions (can be overridden in trigger)
+substitutions:
+  _REGION: 'asia-northeast3'
+  
+# Build timeout
+timeout: '1200s'
+
+# Images to be pushed to Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/senior-mhealth-ai:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/senior-mhealth-ai:latest'
+  - 'gcr.io/$PROJECT_ID/senior-mhealth-api:$COMMIT_SHA'

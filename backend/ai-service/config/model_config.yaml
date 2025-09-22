@@ -1,0 +1,55 @@
+# 모델 배포 설정
+# 환경별 모델 및 VectorStore 위치 정의
+
+development:
+  # 개발 환경: 로컬 파일 사용
+  vectorstore:
+    type: local
+    path: ../libraries/voice_analysis/analysis/vector_store/embeddings.jsonl
+  sincnet:
+    type: local
+    path: ../models/sincnet/
+  cache_enabled: false
+
+staging:
+  # 스테이징: GCS + 로컬 캐싱
+  vectorstore:
+    type: gcs
+    bucket: senior-mhealth-models-staging
+    path: vectorstore/embeddings.jsonl
+    cache_ttl: 86400  # 24시간
+  sincnet:
+    type: gcs
+    bucket: senior-mhealth-models-staging
+    path: sincnet/sincnet_senior.pth
+    cache_ttl: 604800  # 7일
+  cache_enabled: true
+  cache_dir: /tmp/models_cache
+
+production:
+  # 프로덕션: GCS + 영구 캐싱
+  vectorstore:
+    type: gcs
+    bucket: senior-mhealth-models-production
+    path: vectorstore/embeddings.jsonl
+    cache_ttl: 604800  # 7일
+    preload: true  # 시작 시 미리 로드
+  sincnet:
+    type: gcs
+    bucket: senior-mhealth-models-production  
+    path: sincnet/sincnet_senior.pth
+    cache_ttl: 2592000  # 30일
+    preload: true
+  cache_enabled: true
+  cache_dir: /mnt/models_cache  # 영구 볼륨
+
+# 모델 버전 관리
+versions:
+  vectorstore: v1.0.0
+  sincnet: v1.0.0
+  
+# 폴백 설정
+fallback:
+  enabled: true
+  use_embedded: true  # Docker 이미지에 포함된 모델 사용
+  alert_on_fallback: true

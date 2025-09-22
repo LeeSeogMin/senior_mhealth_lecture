@@ -1,0 +1,70 @@
+# Senior MHealth API Service - Production Dependencies
+# Chapter 5: Cloud Run optimized requirements
+
+# === Core Framework ===
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+uvloop==0.19.0
+httptools==0.6.1
+python-multipart==0.0.6
+
+# === Data Validation ===
+pydantic==2.5.0
+pydantic[email]==2.5.0
+python-jose[cryptography]==3.3.0
+
+# === Google Cloud Services ===
+google-cloud-firestore==2.13.1
+firebase-admin==6.1.0
+
+# === Database ===
+sqlalchemy==2.0.23
+pymysql==1.1.0
+asyncpg==0.29.0
+redis==5.0.1
+
+# === PDF Generation ===
+reportlab==4.0.7
+PyPDF2==3.0.1
+
+# === Data Processing ===
+pandas==2.1.3
+numpy==1.24.3
+
+# === Async Support ===
+aiofiles==23.2.1
+asyncio==3.4.3
+httpx==0.25.2
+
+# === Security ===
+passlib[bcrypt]==1.7.4
+python-jwt==4.1.0
+cryptography==41.0.7
+
+# === Monitoring & Logging ===
+prometheus-client==0.19.0
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+
+# === Testing (excluded in prod but listed for reference) ===
+# pytest==7.4.3
+# pytest-asyncio==0.21.1
+# httpx==0.25.2
+
+# === Performance ===
+orjson==3.9.10
+ujson==5.8.0
+
+# === Date/Time ===
+python-dateutil==2.8.2
+pytz==2023.3.post1
+
+# === Environment ===
+python-dotenv==1.0.0
+
+# === Health Checks ===
+typing-extensions==4.8.0
+
+# === API Documentation ===
+pyyaml==6.0.1

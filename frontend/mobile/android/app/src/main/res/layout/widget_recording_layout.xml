@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <!-- 앱 로고/아이콘 -->
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@mipmap/ic_launcher"
+        android:layout_marginBottom="8dp"
+        android:contentDescription="Senior Health Monitor" />
+
+    <!-- 앱 타이틀 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="시니어 건강 모니터"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#333333"
+        android:layout_marginBottom="12dp" />
+
+    <!-- 녹음 시작 버튼 -->
+    <Button
+        android:id="@+id/btn_start_recording"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:text="🎤 통화 녹음 시작"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/recording_button_background"
+        android:elevation="4dp"
+        android:layout_marginTop="8dp" />
+
+    <!-- 상태 텍스트 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="전화 받으며 한 번 터치"
+        android:textSize="12sp"
+        android:textColor="#666666"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout> 

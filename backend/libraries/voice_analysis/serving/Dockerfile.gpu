@@ -1,0 +1,54 @@
+# GPU-enabled Docker image for Cloud Run
+FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
+
+# Install Python and system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-dev \
+    python3-pip \
+    libsndfile1 \
+    ffmpeg \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.11 as default
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip
+RUN python -m pip install --upgrade pip
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements
+COPY requirements-gpu.txt requirements.txt
+
+# Install Python dependencies with CUDA support
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY app/ ./app/
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+    ENABLE_GPU=true \
+    CUDA_VISIBLE_DEVICES=0 \
+    PORT=8080
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser && \
+    chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/health || exit 1
+
+# Expose port
+EXPOSE ${PORT}
+
+# Run the application
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

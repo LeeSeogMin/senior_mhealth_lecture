@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  ai-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: senior-mhealth-ai-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/serviceAccountKey.json
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - ENV=development
+    volumes:
+      - ./:/app
+      - ./serviceAccountKey.json:/app/serviceAccountKey.json:ro
+      - ../data:/data:ro
+    working_dir: /app
+    command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+    networks:
+      - ai-network
+
+  ai-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: senior-mhealth-ai-test
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/serviceAccountKey.json
+      - ENV=test
+    volumes:
+      - ./:/app
+      - ./serviceAccountKey.json:/app/serviceAccountKey.json:ro
+      - ../data:/data:ro
+    working_dir: /app
+    command: pytest -v
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+    driver: bridge

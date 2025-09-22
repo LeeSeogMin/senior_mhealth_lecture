@@ -1,0 +1,57 @@
+steps:
+  # Docker 이미지 빌드 (캐시 없이 새로 빌드)
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker build \
+          --no-cache \
+          -t asia-northeast3-docker.pkg.dev/$PROJECT_ID/ai-services/ai-analysis-service:latest \
+          .
+
+  # Docker 이미지 푸시 (latest 태그만)
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/ai-services/ai-analysis-service:latest'
+
+  # Cloud Run 배포 (실제 통화 녹음 처리 최적화)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'ai-analysis-service'
+      - '--image=asia-northeast3-docker.pkg.dev/$PROJECT_ID/ai-services/ai-analysis-service:latest'
+      - '--region=asia-northeast3'
+      - '--platform=managed'
+      - '--memory=8Gi'    # 2GB -> 8GB (대용량 오디오 파일 처리)
+      - '--cpu=4'         # 기본 -> 4 vCPU (병렬 처리 개선)
+      - '--timeout=900'   # 5분 -> 15분 (10-30분 통화 처리)
+      - '--concurrency=5' # 동시 요청 제한 (메모리 집약적 작업)
+      - '--max-instances=10' # 최대 인스턴스 수 제한
+      - '--min-instances=0'  # 비용 절감을 위해 0으로 유지
+      - '--allow-unauthenticated'
+      - '--set-env-vars=FIREBASE_PROJECT_ID=$PROJECT_ID,FIREBASE_STORAGE_BUCKET=thematic-center-463215-m2.firebasestorage.app,ANALYSIS_MODE=adaptive,MAX_ANALYSIS_TIME=240'
+      - '--service-account=ai-analysis-service@$PROJECT_ID.iam.gserviceaccount.com'
+  
+  # IAM 정책 설정 (공개 액세스 허용) - 오류 무시
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run services add-iam-policy-binding ai-analysis-service \
+          --region=asia-northeast3 \
+          --member=allUsers \
+          --role=roles/run.invoker || echo "IAM 정책 설정 건너뜀 (권한 부족)"
+
+
+images:
+  - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/ai-services/ai-analysis-service:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'  # 빠른 빌드를 위한 고성능 머신
+  substitutionOption: 'ALLOW_LOOSE'

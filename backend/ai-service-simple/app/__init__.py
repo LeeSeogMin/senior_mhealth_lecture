@@ -1,0 +1,1 @@
+# AI Service Simple - App Module

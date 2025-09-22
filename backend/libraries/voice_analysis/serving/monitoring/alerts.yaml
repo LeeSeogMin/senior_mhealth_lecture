@@ -1,0 +1,179 @@
+# Cloud Monitoring Alert Policies
+alertPolicies:
+  # High Error Rate Alert
+  - displayName: "Voice Analysis - High Error Rate"
+    conditions:
+      - displayName: "Error rate > 1%"
+        conditionThreshold:
+          filter: |
+            resource.type="cloud_run_revision"
+            AND resource.label.service_name="voice-analysis-service"
+            AND metric.type="run.googleapis.com/request_count"
+            AND metric.label.response_code_class="5xx"
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: ALIGN_RATE
+              crossSeriesReducer: REDUCE_SUM
+          comparison: COMPARISON_GT
+          thresholdValue: 0.01
+          duration: "120s"
+    notificationChannels:
+      - projects/senior-mhealth-2025/notificationChannels/ai-team-email
+    alertStrategy:
+      autoClose: "1800s"
+    documentation:
+      content: |
+        The voice analysis service is experiencing high error rates.
+        
+        Runbook:
+        1. Check service logs: gcloud logging read "resource.type=cloud_run_revision"
+        2. Verify model loading: Check /health endpoint
+        3. Review recent deployments
+        4. Check upstream dependencies (GCS, Vertex AI)
+      mimeType: text/markdown
+
+  # High Latency Alert
+  - displayName: "Voice Analysis - High Latency"
+    conditions:
+      - displayName: "P95 latency > 5 seconds"
+        conditionThreshold:
+          filter: |
+            resource.type="cloud_run_revision"
+            AND resource.label.service_name="voice-analysis-service"
+            AND metric.type="run.googleapis.com/request_latencies"
+          aggregations:
+            - alignmentPeriod: "300s"
+              perSeriesAligner: ALIGN_PERCENTILE_95
+              crossSeriesReducer: REDUCE_MEAN
+          comparison: COMPARISON_GT
+          thresholdValue: 5000
+          duration: "300s"
+    notificationChannels:
+      - projects/senior-mhealth-2025/notificationChannels/ai-team-email
+    alertStrategy:
+      autoClose: "3600s"
+
+  # Memory Pressure Alert
+  - displayName: "Voice Analysis - Memory Pressure"
+    conditions:
+      - displayName: "Memory utilization > 90%"
+        conditionThreshold:
+          filter: |
+            resource.type="cloud_run_revision"
+            AND resource.label.service_name="voice-analysis-service"
+            AND metric.type="run.googleapis.com/container/memory/utilizations"
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: ALIGN_MEAN
+              crossSeriesReducer: REDUCE_MEAN
+          comparison: COMPARISON_GT
+          thresholdValue: 0.9
+          duration: "180s"
+    notificationChannels:
+      - projects/senior-mhealth-2025/notificationChannels/ai-team-email
+    alertStrategy:
+      autoClose: "1800s"
+    documentation:
+      content: |
+        The service is experiencing high memory usage.
+        
+        Actions:
+        1. Check for memory leaks
+        2. Review batch size configuration
+        3. Consider scaling up memory allocation
+        4. Check model size and caching strategy
+
+  # Low Model Confidence Alert
+  - displayName: "Voice Analysis - Low Model Confidence"
+    conditions:
+      - displayName: "Average confidence < 60%"
+        conditionThreshold:
+          filter: |
+            metric.type="custom.googleapis.com/voice_analysis/prediction_confidence"
+          aggregations:
+            - alignmentPeriod: "600s"
+              perSeriesAligner: ALIGN_MEAN
+              crossSeriesReducer: REDUCE_MEAN
+          comparison: COMPARISON_LT
+          thresholdValue: 0.6
+          duration: "600s"
+    notificationChannels:
+      - projects/senior-mhealth-2025/notificationChannels/ai-team-email
+    severity: WARNING
+    documentation:
+      content: |
+        Model predictions showing low confidence scores.
+        
+        Investigation:
+        1. Review input data quality
+        2. Check for data distribution shift
+        3. Verify model version
+        4. Consider model retraining
+
+  # Scaling Issues Alert
+  - displayName: "Voice Analysis - Scaling Issues"
+    conditions:
+      - displayName: "Instance count at maximum"
+        conditionThreshold:
+          filter: |
+            resource.type="cloud_run_revision"
+            AND resource.label.service_name="voice-analysis-service"
+            AND metric.type="run.googleapis.com/container/instance_count"
+          aggregations:
+            - alignmentPeriod: "300s"
+              perSeriesAligner: ALIGN_MAX
+              crossSeriesReducer: REDUCE_MAX
+          comparison: COMPARISON_GE
+          thresholdValue: 10
+          duration: "600s"
+    notificationChannels:
+      - projects/senior-mhealth-2025/notificationChannels/ai-team-email
+    severity: WARNING
+    documentation:
+      content: |
+        Service is at maximum scaling capacity.
+        
+        Actions:
+        1. Review traffic patterns
+        2. Consider increasing max instances
+        3. Optimize request processing
+        4. Implement request queuing
+
+# Notification Channels
+notificationChannels:
+  - type: email
+    displayName: "AI Team Email"
+    labels:
+      email_address: "ai-team@senior-mhealth.com"
+  
+  - type: slack
+    displayName: "AI Team Slack"
+    labels:
+      channel_name: "#ai-alerts"
+      url: "${SLACK_WEBHOOK_URL}"
+  
+  - type: pagerduty
+    displayName: "On-Call PagerDuty"
+    labels:
+      service_key: "${PAGERDUTY_SERVICE_KEY}"
+
+# Uptime Checks
+uptimeCheckConfigs:
+  - displayName: "Voice Analysis Health Check"
+    monitoredResource:
+      type: "uptime_url"
+      labels:
+        host: "voice-analysis-service-xxx.a.run.app"
+        project_id: "senior-mhealth-2025"
+    httpCheck:
+      path: "/health"
+      port: 443
+      useSsl: true
+      validateSsl: true
+      authInfo:
+        serviceAccount: "monitoring-sa@senior-mhealth-2025.iam.gserviceaccount.com"
+    period: "60s"
+    timeout: "10s"
+    selectedRegions:
+      - "ASIA_PACIFIC"
+      - "USA"

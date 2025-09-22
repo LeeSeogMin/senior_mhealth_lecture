@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 모든 인증된 사용자에게 voice_analysis 경로 접근 허용
+    match /voice_analysis/{userId}/{callId}/{fileName} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // calls 경로도 허용 (기존 호환성)
+    match /calls/{userId}/{seniorId}/{callId}/{fileName} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 기타 모든 인증된 사용자 접근 (디버깅용)
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

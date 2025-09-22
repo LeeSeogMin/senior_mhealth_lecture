@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 인증된 사용자만 접근 가능
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 관리자 권한 체크
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.get('role', '') == 'admin';
+    }
+    
+    // 케어기버 권한 체크
+    function isCaregiver() {
+      return isAuthenticated() && 
+        (request.auth.token.get('role', '') == 'caregiver' || isAdmin());
+    }
+    
+    // 사용자 프로필
+    match /users/{userId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+      allow update: if isAuthenticated() && 
+        request.auth.uid == userId;
+      allow create: if isAuthenticated() && 
+        request.auth.uid == userId;
+      allow delete: if isAdmin();
+      
+      // 사용자별 시니어 데이터 (모바일/웹 공통)
+      match /seniors/{seniorId} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        allow write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      
+      // 사용자별 통화 기록
+      match /calls/{callId} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        allow write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      
+      // 사용자별 분석 결과
+      match /analyses/{analysisId} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        allow write: if isAuthenticated() && request.auth.uid == userId;
+      }
+    }
+    
+    // 최상위 시니어 데이터 (레거시 지원)
+    match /seniors/{seniorId} {
+      allow read: if isAuthenticated();
+      allow create: if isCaregiver();
+      allow update: if isCaregiver();
+      allow delete: if isAdmin();
+    }
+    
+    // 최상위 통화 기록 (레거시 지원)
+    match /calls/{callId} {
+      allow read: if isAuthenticated();
+      allow create: if isCaregiver();
+      allow update: if isCaregiver();
+      allow delete: if isAdmin();
+    }
+    
+    // 최상위 분석 결과 (레거시 지원)
+    match /analyses/{analysisId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated(); // 웹에서도 생성 가능하도록
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+    
+    // 알림
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated(); // 웹에서도 생성 가능하도록
+      allow update: if isAuthenticated() && 
+        request.resource.data.keys().hasAll(['isRead']) &&
+        request.resource.data.keys().size() == 1;
+      allow delete: if isAdmin();
+    }
+  }
+}

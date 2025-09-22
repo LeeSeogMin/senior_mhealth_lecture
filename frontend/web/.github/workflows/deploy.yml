@@ -1,0 +1,240 @@
+# 제10강: Vercel 배포 - GitHub Actions CI/CD
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  # 품질 검사 작업
+  quality-check:
+    name: Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/web/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: frontend/web
+        run: npm ci
+        
+      - name: Type check
+        working-directory: frontend/web
+        run: npm run type-check
+        
+      - name: Lint check
+        working-directory: frontend/web
+        run: npm run lint
+        
+      - name: Run tests
+        working-directory: frontend/web
+        run: npm run test:ci
+        
+      - name: Build application
+        working-directory: frontend/web
+        run: npm run build
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+
+  # Preview 배포 (develop 브랜치 또는 PR)
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: quality-check
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.preview-url }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/web/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: frontend/web
+        run: npm ci
+        
+      - name: Install Vercel CLI
+        run: npm install --global vercel@canary
+        
+      - name: Pull Vercel environment information
+        working-directory: frontend/web
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        
+      - name: Build project artifacts
+        working-directory: frontend/web
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        
+      - name: Deploy to Vercel
+        id: deploy
+        working-directory: frontend/web
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$url" >> $GITHUB_OUTPUT
+          echo "Preview URL: $url"
+          
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 **Preview deployment ready!**\n\n📱 **Preview URL:** ${{ steps.deploy.outputs.preview-url }}\n\n🔍 **Review checklist:**\n- [ ] Functionality works as expected\n- [ ] UI/UX looks correct\n- [ ] Performance is acceptable\n- [ ] No console errors\n\n🤖 *This preview will be updated automatically with new commits.*'
+            })
+
+  # Production 배포 (main 브랜치)
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    needs: quality-check
+    if: github.ref == 'refs/heads/main'
+    
+    environment:
+      name: production
+      url: https://senior-mhealth.vercel.app
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/web/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: frontend/web
+        run: npm ci
+        
+      - name: Install Vercel CLI
+        run: npm install --global vercel@canary
+        
+      - name: Pull Vercel environment information
+        working-directory: frontend/web
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        
+      - name: Build project artifacts
+        working-directory: frontend/web
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        
+      - name: Deploy to Vercel Production
+        id: deploy
+        working-directory: frontend/web
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "production-url=$url" >> $GITHUB_OUTPUT
+          echo "Production URL: $url"
+          
+      - name: Run post-deployment health check
+        run: |
+          echo "Waiting for deployment to be ready..."
+          sleep 30
+          
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ steps.deploy.outputs.production-url }}/api/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ Health check passed"
+          else
+            echo "❌ Health check failed with status: $response"
+            exit 1
+          fi
+          
+      - name: Send Slack notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            Production deployment ${{ job.status }}!
+            🌐 URL: ${{ steps.deploy.outputs.production-url }}
+            📝 Commit: ${{ github.event.head_commit.message }}
+            👤 Author: ${{ github.event.head_commit.author.name }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # 성능 테스트 (Production 배포 후)
+  performance-test:
+    name: Performance Test
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            https://senior-mhealth.vercel.app
+            https://senior-mhealth.vercel.app/dashboard
+            https://senior-mhealth.vercel.app/analyses
+          configPath: './.lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          
+      - name: Comment performance results
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Lighthouse 결과를 GitHub에서 확인할 수 있도록 코멘트 추가
+            console.log('Performance test completed. Check Lighthouse CI results.')
+
+  # 보안 스캔
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: quality-check
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run npm audit
+        working-directory: frontend/web
+        run: npm audit --audit-level=high
+        
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: typescript, javascript
+          
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+        
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3

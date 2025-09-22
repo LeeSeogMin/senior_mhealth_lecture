@@ -1,0 +1,280 @@
+{
+  "rag_application_templates": {
+    "search_filters": {
+      "focus_area_filters": {
+        "dementia_early_detection": {
+          "keywords": ["치매", "인지기능", "K-MMSE", "I-ADL", "K-NPI"],
+          "studies": ["dementia_early_assessment_2004"],
+          "clinical_questions": [
+            "치매 조기평가 방법",
+            "인지기능 저하 패턴",
+            "치매 진단 기준"
+          ]
+        },
+        "hrqol_factors": {
+          "keywords": ["삶의 질", "EQ-5D", "EQ-VAS", "HRQoL"],
+          "studies": ["hrqol_knhanes_2014"],
+          "clinical_questions": [
+            "삶의 질 영향 요인",
+            "HRQoL 개선 방법",
+            "삶의 질 측정 도구"
+          ]
+        },
+        "living_arrangements_depression": {
+          "keywords": ["거주형태", "독거", "동거", "사회적 고립"],
+          "studies": ["social_isolation_2024"],
+          "clinical_questions": [
+            "독거노인 우울 위험",
+            "사회적 고립 영향",
+            "거주형태별 개입"
+          ]
+        },
+        "mmse_profiles_by_disorder": {
+          "keywords": ["K-MMSE", "프로파일", "치매", "정신증"],
+          "studies": ["mmse_profiles_2023"],
+          "clinical_questions": [
+            "질환별 인지기능 패턴",
+            "MMSE 프로파일 해석",
+            "치매 vs 정신증 감별"
+          ]
+        },
+        "population_risk_factors": {
+          "keywords": ["위험요인", "KNHANES", "만성질환", "신체활동"],
+          "studies": ["risk_factors_knhanes_2018"],
+          "clinical_questions": [
+            "우울 위험요인",
+            "보호요인",
+            "인구집단 특성"
+          ]
+        },
+        "scale_correlation": {
+          "keywords": ["상관관계", "PHQ-9", "K-MADRS", "척도"],
+          "studies": ["correlation_phq9_madrs"],
+          "clinical_questions": [
+            "척도 간 상관관계",
+            "도구 선택 기준",
+            "해석 주의사항"
+          ]
+        },
+        "screening_guideline": {
+          "keywords": ["선별", "GDS", "PHQ-9", "CES-D", "지침"],
+          "studies": ["screening_guideline_2019"],
+          "clinical_questions": [
+            "우울 선별 도구",
+            "채점 기준",
+            "해석 지침"
+          ]
+        },
+        "subjective_health_lowincome_alone": {
+          "keywords": ["주관적건강", "저소득", "독거", "SHS"],
+          "studies": ["subjective_health_2022"],
+          "clinical_questions": [
+            "저소득 독거노인 건강",
+            "주관적건강 영향요인",
+            "취약집단 관리"
+          ]
+        }
+      },
+      "risk_level_filters": {
+        "high_risk": {
+          "criteria": [
+            "PHQ-9 ≥ 15점",
+            "독거노인",
+            "만성질환 4개 이상",
+            "주관적건강 '매우나쁨'"
+          ],
+          "priority": "immediate_intervention"
+        },
+        "moderate_risk": {
+          "criteria": [
+            "PHQ-9 10-14점",
+            "만성질환 1-3개",
+            "저소득",
+            "사회적 고립"
+          ],
+          "priority": "urgent_intervention"
+        },
+        "low_risk": {
+          "criteria": [
+            "PHQ-9 0-9점",
+            "동거",
+            "만성질환 없음",
+            "신체활동 참여"
+          ],
+          "priority": "routine_monitoring"
+        }
+      }
+    },
+    "prompt_templates": {
+      "depression_assessment": {
+        "template": "다음 노인의 우울 증상을 분석하세요.\n\n기본 정보:\n- 연령: {age}세\n- 교육수준: {education_level}\n- 거주형태: {living_arrangement}\n- 만성질환: {chronic_diseases}개\n- 주관적건강: {subjective_health}\n\n증상 정보:\n{symptoms}\n\n다음 기준에 따라 분석해주세요:\n1. 우울 위험도 평가\n2. 위험요인 분석\n3. 개입 우선순위\n4. 모니터링 계획",
+        "variables": {
+          "age": "65세 이상",
+          "education_level": "6년 이하/7-12년/13년 이상",
+          "living_arrangement": "독거/동거(인원수)",
+          "chronic_diseases": "0/1-3/4개 이상",
+          "subjective_health": "매우좋음/좋음/보통/나쁨/매우나쁨",
+          "symptoms": "구체적인 증상 기술"
+        },
+        "guidance": "교육수준 6년 이하인 경우 PHQ-9 해석 시 주의, 독거노인은 우울 위험 1.85배 증가 고려"
+      },
+      "cognitive_assessment": {
+        "template": "다음 노인의 인지기능을 분석하세요.\n\nK-MMSE 결과:\n- 총점: {total_score}/30점\n- 지남력: {orientation}/10점\n- 등록: {registration}/3점\n- 회상: {recall}/3점\n- 언어: {language}/9점\n- 계산: {calculation}/5점\n- 도형: {figure}/1점\n\n추가 정보:\n- 연령: {age}세\n- 교육수준: {education_level}\n- 동반증상: {comorbid_symptoms}\n\n다음 기준에 따라 분석해주세요:\n1. 인지기능 수준\n2. 하위영역별 패턴\n3. 질환별 감별\n4. 추적 관찰 계획",
+        "variables": {
+          "total_score": "0-30점",
+          "orientation": "0-10점",
+          "registration": "0-3점",
+          "recall": "0-3점",
+          "language": "0-9점",
+          "calculation": "0-5점",
+          "figure": "0-1점",
+          "age": "65세 이상",
+          "education_level": "교육수준",
+          "comorbid_symptoms": "동반 정신증상"
+        },
+        "guidance": "총점 24점 미만 시 하위영역 패턴으로 치매/정신증 감별, 계산·도형 영역은 집단간 차이 없음"
+      },
+      "risk_assessment": {
+        "template": "다음 노인의 종합적 위험도를 평가하세요.\n\n위험요인:\n- 만성질환: {chronic_count}개\n- 주관적건강: {subjective_health}\n- 신체활동: {physical_activity}\n- 사회적지지: {social_support}\n- 독거여부: {living_alone}\n- 우울증상: {depression_symptoms}\n- 인지기능: {cognitive_status}\n\n다음 기준에 따라 평가해주세요:\n1. 위험도 수준 (낮음/중간/높음/매우높음)\n2. 주요 위험요인\n3. 보호요인\n4. 개입 우선순위\n5. 모니터링 빈도",
+        "variables": {
+          "chronic_count": "0/1-3/4개 이상",
+          "subjective_health": "매우좋음/좋음/보통/나쁨/매우나쁨",
+          "physical_activity": "주 0-1회/2-3회/4-5회/6-7회",
+          "social_support": "낮음/보통/높음",
+          "living_alone": "예/아니오",
+          "depression_symptoms": "PHQ-9 점수 또는 증상",
+          "cognitive_status": "K-MMSE 점수 또는 상태"
+        },
+        "guidance": "만성질환 4개 이상, 주관적건강 '매우나쁨', 독거 시 고위험군으로 분류"
+      },
+      "quality_of_life_assessment": {
+        "template": "다음 노인의 삶의 질을 평가하세요.\n\nEQ-5D 결과:\n- 총점: {eq5d_score}\n- EQ-VAS: {eq_vas}/100점\n\n영향요인:\n- 스트레스: {stress_level}\n- 우울감: {depression_level}\n- 영양상태: {nutrition_status}\n- 신체활동: {physical_activity}\n- 사회활동: {social_activity}\n\n다음 기준에 따라 평가해주세요:\n1. 삶의 질 수준\n2. 주요 영향요인\n3. 개선 방안\n4. 추적 관찰",
+        "variables": {
+          "eq5d_score": "0-1점",
+          "eq_vas": "0-100점",
+          "stress_level": "낮음/보통/높음",
+          "depression_level": "PHQ-9 점수 또는 수준",
+          "nutrition_status": "양호/보통/불량",
+          "physical_activity": "참여 빈도",
+          "social_activity": "참여 빈도"
+        },
+        "guidance": "스트레스, 우울감, 영양결핍 시 HRQoL 저하, 신체활동 참여 시 향상"
+      }
+    },
+    "weighted_response_guidelines": {
+      "statistical_evidence": {
+        "odds_ratios": {
+          "description": "위험요인의 통계적 근거",
+          "examples": [
+            "만성질환 4개 이상: OR = 1.69",
+            "주관적건강 '매우나쁨': OR = 22.28",
+            "독거: OR = 1.85"
+          ]
+        },
+        "correlation_coefficients": {
+          "description": "상관관계의 통계적 근거",
+          "examples": [
+            "PHQ-9 vs K-MADRS: r = 0.85",
+            "우울 vs 주관적건강: r = -0.52"
+          ]
+        },
+        "reliability_coefficients": {
+          "description": "도구의 신뢰도",
+          "examples": [
+            "PHQ-9: Cronbach's α = 0.89",
+            "GDS-15: Cronbach's α = 0.82"
+          ]
+        }
+      },
+      "confidence_intervals": {
+        "description": "통계적 유의성과 정확도",
+        "examples": [
+          "OR = 1.69 (95% CI: 1.23-2.31)",
+          "r = 0.85 (p < 0.001)"
+        ]
+      }
+    },
+    "personalized_feedback_rules": {
+      "education_level_adjustments": {
+        "low_education": {
+          "description": "6년 이하 교육수준",
+          "adjustments": [
+            "PHQ-9 해석 시 주의 (일부 문항 불일치 가능)",
+            "간단한 언어 사용",
+            "가족 동반 권장",
+            "반복 설명 필요"
+          ]
+        },
+        "high_education": {
+          "description": "13년 이상 교육수준",
+          "adjustments": [
+            "정확한 해석 가능",
+            "상세한 정보 제공",
+            "자기관리 능력 높음",
+            "적극적 참여 유도"
+          ]
+        }
+      },
+      "living_arrangement_adjustments": {
+        "living_alone": {
+          "description": "독거노인",
+          "adjustments": [
+            "우울 위험 1.85배 증가",
+            "사회적 지지망 구축 우선",
+            "정기적 연락 체계",
+            "긴급상황 대비 계획"
+          ]
+        },
+        "cohabitation": {
+          "description": "동거노인",
+          "adjustments": [
+            "가족 교육 병행",
+            "동거인 수 증가 시 우울 감소",
+            "가족 갈등 관리",
+            "개인적 공간 보장"
+          ]
+        }
+      },
+      "health_status_adjustments": {
+        "multiple_chronic_diseases": {
+          "description": "만성질환 4개 이상",
+          "adjustments": [
+            "우울 위험 1.69배 증가",
+            "통합적 질환 관리",
+            "약물 상호작용 주의",
+            "재활 프로그램 권장"
+          ]
+        },
+        "poor_subjective_health": {
+          "description": "주관적건강 '매우나쁨'",
+          "adjustments": [
+            "우울 위험 22.28배 증가",
+            "즉시 전문가 상담",
+            "의학적 평가 병행",
+            "가족 교육 필수"
+          ]
+        }
+      }
+    },
+    "automated_variable_integration": {
+      "mandatory_variables": {
+        "age": "65세 이상 노인 대상",
+        "education_level": "6년 이하/7-12년/13년 이상 구분",
+        "living_arrangement": "독거/동거 구분, 동거인 수",
+        "chronic_diseases": "보유 질환 수 (0, 1-3, 4개 이상)"
+      },
+      "optional_variables": {
+        "subjective_health": "매우좋음/좋음/보통/나쁨/매우나쁨",
+        "physical_activity": "걷기 빈도 (주 0-1회/2-3회/4-5회/6-7회)",
+        "social_support": "사회적 지지 수준 (낮음/보통/높음)",
+        "fear_of_falling": "낙상 두려움 (있음/없음)"
+      },
+      "derived_variables": {
+        "vulnerable_population": "저소득+독거+다중이환+낮은주관적건강",
+        "high_risk_depression": "만성질환4개이상 OR 주관적건강매우나쁨 OR 독거",
+        "cognitive_impairment": "K-MMSE < 24점",
+        "quality_of_life_decline": "EQ-5D < 0.7 OR 스트레스높음 OR 우울감있음"
+      }
+    }
+  }
+} 

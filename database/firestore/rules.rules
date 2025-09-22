@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 사용자 인증 확인 함수
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 사용자 본인 확인 함수
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // 보호자 확인 함수
+    function isCaregiver(seniorId) {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/caregiver_senior_relationships/$(request.auth.uid + '_' + seniorId));
+    }
+    
+    // 관리자 확인 함수
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // 사용자 프로필
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // 시니어 정보
+    match /seniors/{seniorId} {
+      allow read: if isCaregiver(seniorId) || isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if isCaregiver(seniorId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // 보호자-시니어 관계
+    match /caregiver_senior_relationships/{relationshipId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // 분석 세션
+    match /analysis_sessions/{sessionId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.caregiver_id == request.auth.uid || 
+         resource.data.senior_id == request.auth.uid || 
+         isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (resource.data.caregiver_id == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // 분석 결과
+    match /analysis_results/{resultId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.caregiver_id == request.auth.uid || 
+         resource.data.senior_id == request.auth.uid || 
+         isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (resource.data.caregiver_id == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // 알림 설정
+    match /notification_settings/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+    
+    // 시스템 설정 (관리자만)
+    match /system_settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // 로그 (읽기 전용)
+    match /logs/{logId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // 로그는 시스템에서만 작성
+    }
+  }
+}

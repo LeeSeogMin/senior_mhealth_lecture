@@ -1,0 +1,200 @@
+{
+  "displayName": "Senior MHealth ETL Pipeline Dashboard",
+  "mosaicLayout": {
+    "tiles": [
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "ETL Function Executions",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "resource.type=\"cloud_function\" AND resource.labels.function_name=~\"firestore-to-sql.*|sql-to-bigquery.*\"",
+                    "aggregation": {
+                      "alignmentPeriod": "60s",
+                      "perSeriesAligner": "ALIGN_RATE",
+                      "crossSeriesReducer": "REDUCE_SUM",
+                      "groupByFields": ["resource.labels.function_name"]
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "${resource.labels.function_name}"
+              }
+            ],
+            "timeshiftDuration": "0s",
+            "yAxis": {
+              "label": "Executions/sec",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "ETL Function Error Rate",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "resource.type=\"cloud_function\" AND resource.labels.function_name=~\"firestore-to-sql.*|sql-to-bigquery.*\" AND metric.type=\"cloudfunctions.googleapis.com/function/execution_count\" AND metric.labels.status!=\"ok\"",
+                    "aggregation": {
+                      "alignmentPeriod": "300s",
+                      "perSeriesAligner": "ALIGN_RATE",
+                      "crossSeriesReducer": "REDUCE_SUM",
+                      "groupByFields": ["resource.labels.function_name", "metric.labels.status"]
+                    }
+                  }
+                },
+                "plotType": "STACKED_BAR",
+                "legendTemplate": "${resource.labels.function_name} - ${metric.labels.status}"
+              }
+            ],
+            "yAxis": {
+              "label": "Error Rate",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "yPos": 4,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "ETL Function Execution Duration",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "resource.type=\"cloud_function\" AND resource.labels.function_name=~\"firestore-to-sql.*|sql-to-bigquery.*\" AND metric.type=\"cloudfunctions.googleapis.com/function/execution_times\"",
+                    "aggregation": {
+                      "alignmentPeriod": "300s",
+                      "perSeriesAligner": "ALIGN_PERCENTILE_95",
+                      "crossSeriesReducer": "REDUCE_MEAN",
+                      "groupByFields": ["resource.labels.function_name"]
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "${resource.labels.function_name} (P95)"
+              }
+            ],
+            "yAxis": {
+              "label": "Duration (ms)",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "yPos": 4,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Cloud SQL Connection Pool",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "resource.type=\"cloudsql_database\" AND resource.labels.database_id=\"senior-mhealth-472007:asia-northeast3:senior-mhealth-postgres\" AND metric.type=\"cloudsql.googleapis.com/database/postgresql/num_backends\"",
+                    "aggregation": {
+                      "alignmentPeriod": "60s",
+                      "perSeriesAligner": "ALIGN_MEAN"
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "Active Connections"
+              }
+            ],
+            "yAxis": {
+              "label": "Connections",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "yPos": 8,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "BigQuery Job Status",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "resource.type=\"bigquery_project\" AND metric.type=\"bigquery.googleapis.com/job/num_in_flight\"",
+                    "aggregation": {
+                      "alignmentPeriod": "300s",
+                      "perSeriesAligner": "ALIGN_MAX",
+                      "crossSeriesReducer": "REDUCE_SUM",
+                      "groupByFields": ["metric.labels.job_type"]
+                    }
+                  }
+                },
+                "plotType": "STACKED_AREA",
+                "legendTemplate": "${metric.labels.job_type}"
+              }
+            ],
+            "yAxis": {
+              "label": "Jobs in Flight",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 6,
+        "yPos": 8,
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Data Freshness (Hours)",
+          "scorecard": {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "resource.type=\"gce_instance\" AND metric.type=\"custom.googleapis.com/etl/data_freshness_hours\"",
+                "aggregation": {
+                  "alignmentPeriod": "300s",
+                  "perSeriesAligner": "ALIGN_MEAN"
+                }
+              }
+            },
+            "sparkChartView": {
+              "sparkChartType": "SPARK_LINE"
+            },
+            "gaugeView": {
+              "lowerBound": 0,
+              "upperBound": 24
+            }
+          }
+        }
+      },
+      {
+        "yPos": 12,
+        "width": 12,
+        "height": 4,
+        "widget": {
+          "title": "ETL Pipeline Health Status",
+          "text": {
+            "content": "## ETL Pipeline Components\n\n**Real-time ETL**: Firestore → Cloud SQL  \n**Batch ETL**: Cloud SQL → BigQuery  \n**Monitoring**: Cloud Functions, Cloud SQL, BigQuery\n\n### Health Indicators\n- 🟢 Healthy: Error rate < 1%\n- 🟡 Warning: Error rate 1-5%\n- 🔴 Critical: Error rate > 5%",
+            "format": "MARKDOWN"
+          }
+        }
+      }
+    ]
+  }
+}

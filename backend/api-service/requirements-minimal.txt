@@ -1,0 +1,25 @@
+# Senior MHealth User Management API - Minimal Dependencies
+# Only essential packages for user management
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Data Validation
+pydantic[email]==2.5.0
+
+# Firebase & Google Cloud
+google-cloud-firestore==2.13.1
+firebase-admin==6.1.0
+
+# Async Support
+httpx==0.25.2
+aiofiles==23.2.1
+
+# Environment
+python-dotenv==1.0.0
+
+# Date/Time
+python-dateutil==2.8.2
+pytz==2023.3.post1

@@ -1,0 +1,18 @@
+# Whitelist approach - exclude everything, then include only what we need
+*
+
+# Include only essential files
+!app/**
+!*.py
+!requirements*.txt
+!Dockerfile*
+
+# But exclude Python cache and unnecessary files
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/test_*
+**/*.log
+**/*.sqlite
+**/*.db

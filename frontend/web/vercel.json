@@ -1,0 +1,102 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["icn1"],
+  "public": true,
+  "functions": {
+    "app/api/reports/generate/route.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "app/api/analysis/route.ts": {
+      "maxDuration": 60,
+      "memory": 2048
+    },
+    "app/api/voice/upload/route.ts": {
+      "maxDuration": 45,
+      "memory": 1536
+    },
+    "app/api/metrics/realtime/route.ts": {
+      "maxDuration": 10,
+      "memory": 512
+    }
+  },
+  "env": {
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options", 
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        }
+      ]
+    },
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/images/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, s-maxage=31536000"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "github": {
+    "silent": true
+  },
+  "outputDirectory": ".next"
+}

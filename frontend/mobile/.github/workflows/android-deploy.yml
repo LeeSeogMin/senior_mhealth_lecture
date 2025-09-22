@@ -1,0 +1,185 @@
+# 제11강: Flutter 앱 실기기 테스트 및 배포 - Android 자동 배포 파이프라인
+name: Android Deployment
+
+on:
+  push:
+    branches: [main, release/*]
+  workflow_dispatch:
+    inputs:
+      release_track:
+        description: 'Release track (internal, alpha, beta, production)'
+        required: true
+        default: 'internal'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+    
+    - name: Setup Flutter 3.24
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        cache: true
+    
+    - name: Install dependencies
+      working-directory: ./frontend/mobile
+      run: flutter pub get
+    
+    - name: Run analyzer
+      working-directory: ./frontend/mobile
+      run: flutter analyze
+    
+    - name: Run unit tests
+      working-directory: ./frontend/mobile
+      run: flutter test --coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./frontend/mobile/coverage/lcov.info
+        flags: flutter
+        name: flutter-coverage
+    
+    - name: Setup Android signing
+      working-directory: ./frontend/mobile
+      env:
+        ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD }}
+        ANDROID_KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+      run: |
+        echo "$ANDROID_KEYSTORE" | base64 --decode > android/keystore.jks
+        echo "ANDROID_KEYSTORE_PATH=$(pwd)/android/keystore.jks" >> $GITHUB_ENV
+    
+    - name: Build AAB for Production
+      working-directory: ./frontend/mobile
+      env:
+        ANDROID_KEYSTORE_PATH: ${{ env.ANDROID_KEYSTORE_PATH }}
+        ANDROID_KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD }}
+      run: |
+        flutter build appbundle --release \
+          --flavor production \
+          --obfuscate \
+          --split-debug-info=symbols/android \
+          --target-platform android-arm64 \
+          --analyze-size
+    
+    - name: Build APK for Testing
+      working-directory: ./frontend/mobile
+      env:
+        ANDROID_KEYSTORE_PATH: ${{ env.ANDROID_KEYSTORE_PATH }}
+        ANDROID_KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD }}
+      run: |
+        flutter build apk --release \
+          --flavor production \
+          --obfuscate \
+          --split-debug-info=symbols/android
+    
+    - name: Generate release notes
+      working-directory: ./frontend/mobile
+      run: |
+        echo "Version: $(flutter --version --machine | jq -r '.flutterVersion')" > release-notes.txt
+        echo "Build Date: $(date)" >> release-notes.txt
+        echo "Commit: ${{ github.sha }}" >> release-notes.txt
+        echo "Branch: ${{ github.ref_name }}" >> release-notes.txt
+        echo "" >> release-notes.txt
+        echo "Changes in this release:" >> release-notes.txt
+        git log --oneline --since="7 days ago" >> release-notes.txt || echo "No recent commits" >> release-notes.txt
+    
+    - name: Run integration tests on Firebase Test Lab
+      working-directory: ./frontend/mobile
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+      run: |
+        # Firebase 서비스 계정 키 설정
+        echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > firebase-service-account.json
+        export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/firebase-service-account.json"
+        
+        # Test APK 빌드
+        flutter build apk --debug --flavor production
+        pushd android
+        ./gradlew app:assembleAndroidTest
+        ./gradlew app:assembleDebug -Ptarget=../integration_test/app_test.dart
+        popd
+        
+        # Firebase Test Lab에서 테스트 실행
+        gcloud auth activate-service-account --key-file=firebase-service-account.json
+        gcloud config set project senior-mhealth-prod
+        
+        gcloud firebase test android run \
+          --type instrumentation \
+          --app build/app/outputs/apk/production/debug/app-production-debug.apk \
+          --test build/app/outputs/apk/androidTest/production/debug/app-production-debug-androidTest.apk \
+          --device model=Pixel6,version=33,locale=ko,orientation=portrait \
+          --device model=Galaxy_S21,version=30,locale=ko,orientation=portrait \
+          --timeout 20m \
+          --results-bucket gs://senior-mhealth-test-results || true
+    
+    - name: Upload to Google Play Console
+      uses: r0adkll/upload-google-play@v1.1.3
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+        packageName: com.seniormhealth.app
+        releaseFiles: ./frontend/mobile/build/app/outputs/bundle/productionRelease/app-production-release.aab
+        track: ${{ github.event.inputs.release_track || 'internal' }}
+        status: completed
+        inAppUpdatePriority: 2
+        whatsNewDirectory: ./frontend/mobile/whatsnew/
+        mappingFile: ./frontend/mobile/symbols/android/app.android-arm64.symbols
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-build-artifacts
+        path: |
+          ./frontend/mobile/build/app/outputs/bundle/productionRelease/app-production-release.aab
+          ./frontend/mobile/build/app/outputs/apk/production/release/app-production-release.apk
+          ./frontend/mobile/symbols/android/
+          ./frontend/mobile/release-notes.txt
+        retention-days: 30
+    
+    - name: Notify deployment status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#mobile-releases'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        text: |
+          🤖 Senior MHealth Android 배포 상태: ${{ job.status }}
+          
+          📱 플랫폼: Android AAB
+          🎯 트랙: ${{ github.event.inputs.release_track || 'internal' }}
+          📦 빌드: ${{ github.run_number }}
+          🌿 브랜치: ${{ github.ref_name }}
+          👤 작성자: ${{ github.actor }}
+          
+          ${{ job.status == 'success' && '✅ 배포가 성공적으로 완료되었습니다!' || '❌ 배포 중 오류가 발생했습니다.' }}
+    
+    - name: Clean up sensitive files
+      if: always()
+      working-directory: ./frontend/mobile
+      run: |
+        rm -f android/keystore.jks
+        rm -f firebase-service-account.json

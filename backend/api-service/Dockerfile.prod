@@ -1,0 +1,69 @@
+# Senior MHealth API Service - Production Multi-Stage Build
+# Chapter 5: Cloud Run optimized container
+
+# Stage 1: Builder
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements-prod.txt requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+# Create non-root user for security
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app && \
+    chown -R appuser:appuser /app
+
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy Python packages from builder
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
+
+# Copy application code
+COPY --chown=appuser:appuser app/ ./app/
+COPY --chown=appuser:appuser pytest.ini ./
+# Copy service account key from root folder
+COPY --chown=appuser:appuser ../../serviceAccountKey.json /app/serviceAccountKey.json
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH=/home/appuser/.local/bin:$PATH \
+    PORT=8080 \
+    ENVIRONMENT=production
+
+# Switch to non-root user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Expose port
+EXPOSE 8080
+
+# Run with optimized settings
+CMD ["python", "-m", "uvicorn", "app.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8080", \
+     "--workers", "4", \
+     "--loop", "uvloop", \
+     "--access-log", \
+     "--log-level", "info"]

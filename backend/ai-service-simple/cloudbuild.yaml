@@ -1,0 +1,47 @@
+steps:
+  # Docker 이미지 빌드
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA', '.']
+    dir: 'backend/ai-service-simple'
+
+  # Docker 이미지를 Container Registry에 푸시
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA']
+
+  # Cloud Run에 배포
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--port'
+      - '8000'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--max-instances'
+      - '10'
+      - '--min-instances'
+      - '0'
+      - '--set-env-vars'
+      - 'GEMINI_API_KEY=${_GEMINI_API_KEY}'
+
+substitutions:
+  _GEMINI_API_KEY: '${GEMINI_API_KEY}'
+  _SERVICE_NAME: 'ai-service-simple'
+  _REGION: 'asia-northeast3'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '1200s'

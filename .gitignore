@@ -111,10 +111,6 @@ mobile_app/ios/build/
 *.ipa
 *.aab
 
-# Next.js
-frontend/web/.next/
-frontend/web/out/
-frontend/web/.vercel
 
 # === 환경 변수 (중요!) ===
 .env
